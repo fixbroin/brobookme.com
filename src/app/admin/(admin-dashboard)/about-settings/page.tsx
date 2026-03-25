@@ -179,7 +179,8 @@ export default function AboutSettingsPage() {
                                      <Image src={member.imageUrl} alt={member.name} width={128} height={128} className="rounded-full h-32 w-32 object-cover border" />
                                      <input
                                         type="file"
-                                        ref={el => (fileInputRefs.current[member.id] = el)}
+                                        ref={el => { fileInputRefs.current[member.id] = el }}
+
                                         className="hidden"
                                         onChange={(e) => e.target.files && handleImageChange(member.id, e.target.files[0])}
                                         accept="image/*"

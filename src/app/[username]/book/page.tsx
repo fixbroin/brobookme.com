@@ -34,11 +34,12 @@ const serializeObject = (obj: any): any => {
 };
 
 type Props = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const provider = await getProviderByUsername(params.username);
+  const { username } = await params;
+  const provider = await getProviderByUsername(username);
   if (!provider) {
     return { title: 'Provider Not Found' };
   }
@@ -46,13 +47,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Book an Appointment with ${provider.name}`,
     description: `Schedule your appointment with ${provider.name}.`,
     alternates: {
-      canonical: `/${params.username}/book`,
+      canonical: `/${username}/book`,
     },
   };
 }
 
 export default async function BookAppointmentPage({ params }: Props) {
-  const providerData = await getProviderByUsername(params.username);
+  const { username } = await params;
+  const providerData = await getProviderByUsername(username);
 
   if (!providerData || providerData.isSuspended) {
     notFound();
@@ -73,9 +75,7 @@ export default async function BookAppointmentPage({ params }: Props) {
         <Suspense fallback={<div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
             <BookingForm provider={provider} />
         </Suspense>
-         <footer className="mt-8 py-4 text-center text-sm text-muted-foreground">
-            Powered by <Link href="/" className="font-semibold text-primary hover:underline">BroBookMe</Link>
-        </footer>
+         
     </PublicPageLayout>
   );
 }

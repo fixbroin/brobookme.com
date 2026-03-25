@@ -66,7 +66,7 @@ export default function HeroSettingsPage() {
             }
              if (adminSettings?.site?.branding) {
                 setBrandingSettings(adminSettings.site.branding);
-                setLogo(s => ({ ...s, preview: adminSettings.site.branding.logoUrl }));
+                setLogo(s => ({ ...s, preview: adminSettings.site!.branding.logoUrl }));
             }
             setLoading(false);
         });

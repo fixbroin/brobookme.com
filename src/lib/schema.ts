@@ -9,7 +9,7 @@ export const BookingSchema = z.object({
   countryCode: z.string().min(1, 'Country code is required.'),
   customerPhone: z.string().min(1, 'You need to fill this field'),
   serviceType: z.string().min(1, 'Please select a service type.'),
-  serviceId: z.string().optional(),
+  serviceSlug: z.string().optional(),
   flatHouseNo: z.string().optional(),
   landmark: z.string().optional(),
   pincode: z.string().optional(),

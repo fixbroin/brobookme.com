@@ -9,7 +9,8 @@ import { getProviderByUsername, updateProvider } from '@/lib/data';
 import type { Provider, Service } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
-import { Loader2, PlusCircle, Upload, Trash2, Image as ImageIcon, X, Edit } from 'lucide-react';
+import { slugify } from '@/lib/utils';
+import { Loader2, PlusCircle, Upload, Trash2, Image as ImageIcon, X, Edit, CheckCircle2, MinusCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -28,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 
 const emptyService: Omit<Service, 'id'> = {
   title: '',
+  slug: '',
   description: '',
   imageUrl: 'https://picsum.photos/seed/service/400/250',
   price: 0,
@@ -50,6 +52,8 @@ export default function ServicesPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [newItemIncluded, setNewItemIncluded] = useState('');
+  const [newItemExcluded, setNewItemExcluded] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -84,11 +88,35 @@ export default function ServicesPage() {
     setImageFile(null);
     setImagePreview(null);
     setUploadProgress(null);
+    setNewItemIncluded('');
+    setNewItemExcluded('');
+  };
+
+  const handleAddItem = (type: 'included' | 'excluded') => {
+    const value = type === 'included' ? newItemIncluded : newItemExcluded;
+    if (!value.trim()) return;
+
+    setCurrentService(prev => {
+      if (!prev) return null;
+      const currentList = prev[type] || [];
+      return { ...prev, [type]: [...currentList, value.trim()] };
+    });
+
+    if (type === 'included') setNewItemIncluded('');
+    else setNewItemExcluded('');
+  };
+
+  const handleRemoveItem = (type: 'included' | 'excluded', index: number) => {
+    setCurrentService(prev => {
+      if (!prev) return null;
+      const currentList = prev[type] || [];
+      return { ...prev, [type]: currentList.filter((_, i) => i !== index) };
+    });
   };
 
   const handleOpenForm = useCallback((service: Service | null = null) => {
     if (service) {
-      setCurrentService({ ...service });
+      setCurrentService({ ...service, slug: service.slug || slugify(service.title || '') });
       setImagePreview(service.imageUrl);
     } else {
       const newOrder = provider?.settings.services ? Math.max(0, ...provider.settings.services.map(s => s.displayOrder)) + 1 : 1;
@@ -145,8 +173,11 @@ export default function ServicesPage() {
         ...emptyService,
         ...currentService,
         id: currentService.id || uuidv4(),
+        slug: currentService.slug || slugify(currentService.title || ''),
         price: currentService.price ?? 0,
         imageUrl: imageUrl,
+        included: currentService.included || [],
+        excluded: currentService.excluded || [],
       };
 
       const existingServices = provider.settings.services || [];
@@ -234,6 +265,7 @@ export default function ServicesPage() {
                   </div>
                   <CardHeader>
                     <CardTitle>{service.title}</CardTitle>
+                    <p className="text-xs text-muted-foreground font-mono truncate">slug: {service.slug || service.id}</p>
                      <div className="text-lg font-bold">
                         {service.offerPrice ? (
                             <span><span className="line-through text-muted-foreground">₹{service.price}</span> ₹{service.offerPrice}</span>
@@ -294,7 +326,25 @@ export default function ServicesPage() {
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="title">Service Title</Label>
-                            <Input id="title" value={currentService.title || ''} onChange={e => setCurrentService(s => s ? {...s, title: e.target.value} : null)} required />
+                            <Input id="title" value={currentService.title || ''} onChange={e => {
+                                const newTitle = e.target.value;
+                                setCurrentService(s => {
+                                    if (!s) return null;
+                                    const oldTitle = s.title || '';
+                                    const oldSlug = s.slug || '';
+                                    const isSynced = !oldSlug || oldSlug === slugify(oldTitle);
+                                    return {
+                                        ...s, 
+                                        title: newTitle, 
+                                        slug: isSynced ? slugify(newTitle) : oldSlug
+                                    };
+                                });
+                            }} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="slug">Service Slug (URL)</Label>
+                            <Input id="slug" value={currentService.slug || ''} onChange={e => setCurrentService(s => s ? {...s, slug: slugify(e.target.value)} : null)} required />
+                            <p className="text-xs text-muted-foreground">This will be used in the URL: /{provider.username}/services/{currentService.slug || '...'}</p>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="description">Short Description</Label>
@@ -361,6 +411,86 @@ export default function ServicesPage() {
                                     </div>
                                 ))}
                              </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-6">
+                    <div className="space-y-4">
+                        <Label className="text-base font-bold flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            What&apos;s Included
+                        </Label>
+                        <div className="flex gap-2">
+                            <Input 
+                                placeholder="Add an item (e.g. Free cleanup)" 
+                                value={newItemIncluded}
+                                onChange={(e) => setNewItemIncluded(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleAddItem('included');
+                                    }
+                                }}
+                            />
+                            <Button type="button" size="icon" onClick={() => handleAddItem('included')}>
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
+                            {currentService.included?.map((item, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 rounded-md bg-muted/50 group">
+                                    <span className="text-sm truncate mr-2">{item}</span>
+                                    <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => handleRemoveItem('included', index)}
+                                    >
+                                        <X className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 border-t md:border-t-0 md:border-l md:pl-8 pt-6 md:pt-0">
+                        <Label className="text-base font-bold flex items-center gap-2">
+                            <XCircle className="h-5 w-5 text-destructive" />
+                            What&apos;s Not Included
+                        </Label>
+                        <div className="flex gap-2">
+                            <Input 
+                                placeholder="Add an item (e.g. Spare parts)" 
+                                value={newItemExcluded}
+                                onChange={(e) => setNewItemExcluded(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleAddItem('excluded');
+                                    }
+                                }}
+                            />
+                            <Button type="button" size="icon" onClick={() => handleAddItem('excluded')}>
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
+                            {currentService.excluded?.map((item, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 rounded-md bg-muted/50 group">
+                                    <span className="text-sm truncate mr-2">{item}</span>
+                                    <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => handleRemoveItem('excluded', index)}
+                                    >
+                                        <X className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

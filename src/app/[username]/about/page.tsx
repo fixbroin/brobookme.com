@@ -6,11 +6,12 @@ import { PublicPageLayout } from "../_components/public-page-layout";
 import type { Metadata } from 'next';
 
 type Props = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const provider = await getProviderByUsername(params.username);
+  const { username } = await params;
+  const provider = await getProviderByUsername(username);
   if (!provider || !provider.settings.customPages?.about?.enabled) {
     return { title: 'Not Found' };
   }
@@ -22,18 +23,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: pageTitle,
     description: aboutSettings.description?.substring(0, 160) || `Learn more about ${provider.name}.`,
     alternates: {
-      canonical: `/${params.username}/about`,
+      canonical: `/${username}/about`,
     },
     openGraph: {
       title: pageTitle,
       description: aboutSettings.description?.substring(0, 160),
-      url: `/${params.username}/about`,
+      url: `/${username}/about`,
     }
   };
 }
 
 export default async function ProviderAboutPage({ params }: Props) {
-    const provider = await getProviderByUsername(params.username);
+    const { username } = await params;
+    const provider = await getProviderByUsername(username);
 
     if (!provider || !provider.settings.customPages?.about?.enabled) {
         notFound();

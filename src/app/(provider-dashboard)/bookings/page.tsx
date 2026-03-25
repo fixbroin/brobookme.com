@@ -2,7 +2,7 @@
 
 'use client';
 
-import { getBookingsByProvider, getProviderByUsername, updateBookingStatus, deleteBooking, getBookingsForDay, getNotificationsForProvider, markAllNotificationsRead, clearAllNotifications } from "@/lib/data";
+import { getBookingsByProvider, getProviderByUsername, updateBookingStatus, deleteBooking, getBookingsForDay /*, getNotificationsForProvider, markAllNotificationsRead, clearAllNotifications */ } from "@/lib/data";
 import { cancelBooking, rescheduleBooking } from "@/lib/actions";
 import {
   Card,
@@ -226,7 +226,7 @@ export default function BookingsPage() {
           <TableBody>
             {bookings.length > 0 ? (
               bookings.map((booking) => {
-                const service = provider?.settings.services?.find(s => s.id === booking.serviceId);
+                const service = provider?.settings.services?.find(s => s.slug === booking.serviceSlug || s.id === booking.serviceSlug);
                 const serviceTitle = service?.title || booking.serviceType;
                 return (
                 <TableRow key={booking.id} className={isPending && (dialogState.booking?.id === booking.id || viewDialogState.booking?.id === booking.id) ? 'opacity-50' : ''}>
@@ -287,7 +287,7 @@ export default function BookingsPage() {
       <div className="md:hidden space-y-4">
         {bookings.length > 0 ? (
           bookings.map((booking) => {
-            const service = provider?.settings.services?.find(s => s.id === booking.serviceId);
+            const service = provider?.settings.services?.find(s => s.slug === booking.serviceSlug || s.id === booking.serviceSlug);
             const serviceTitle = service?.title || booking.serviceType;
             return (
             <Card key={booking.id} className={isPending && (dialogState.booking?.id === booking.id || viewDialogState.booking?.id === booking.id) ? 'opacity-50' : ''}>
@@ -350,7 +350,7 @@ export default function BookingsPage() {
     if (!booking || !provider) return null;
 
     const payment = booking.payment;
-    const service = provider.settings.services?.find(s => s.id === booking.serviceId);
+    const service = provider.settings.services?.find(s => s.slug === booking.serviceSlug || s.id === booking.serviceSlug);
     const serviceTitle = service?.title || booking.serviceType;
     const isPaid = payment?.status === 'Paid' && payment.amount && payment.amount > 0;
     const isPayLater = payment?.status === 'Pending' && payment.amount && payment.amount > 0;

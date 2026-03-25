@@ -38,7 +38,6 @@ import {
   Instagram,
   Youtube,
   LucideProps,
-  createElement,
   FileText,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -326,9 +325,11 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                             className="rounded-lg shadow-2xl"
                             data-ai-hint="app dashboard"
                             priority
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                             onContextMenu={(e) => e.preventDefault()}
                             draggable={false}
                         />
+
                     </a>
                 </ScrollAnimation>
                </div>
@@ -461,13 +462,13 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                                 alt={`Screenshot ${index + 1}`}
                                 width={1200}
                                 height={800}
+                                sizes="(max-width: 768px) 100vw, 50vw"
                                 className="w-full"
                                 data-ai-hint="app screenshot"
                                 onContextMenu={(e) => e.preventDefault()}
                                 draggable={false}
                                 />
-                            </div>
-                        </a>
+                            </div>                        </a>
                       </ScrollAnimation>
                     ))}
                   </div>

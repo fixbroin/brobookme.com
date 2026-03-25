@@ -171,7 +171,8 @@ export default function ScreenshotsSettingsPage() {
                                 <input 
                                     type="file"
                                     className="hidden"
-                                    ref={el => fileInputRefs.current[item.id] = el}
+                                    ref={el => { fileInputRefs.current[item.id] = el }}
+
                                     onChange={(e) => e.target.files && handleImageFileChange(item.id, e.target.files[0])}
                                     accept="image/*" 
                                 />

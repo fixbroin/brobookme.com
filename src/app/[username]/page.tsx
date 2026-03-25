@@ -9,7 +9,7 @@ import { ProviderBookingPageContent } from "@/components/provider-booking-page";
 import type { Provider } from "@/lib/types";
 
 type Props = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 // This line forces the page to be dynamically rendered, ensuring fresh data on every request.
@@ -19,7 +19,7 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const username = params.username;
+  const { username } = await params;
   const provider = await getProviderByUsername(username);
 
   if (!provider) {
@@ -75,7 +75,8 @@ const serializeObject = (obj: any): any => {
 
 
 export default async function ProviderBookingPage({ params }: Props) {
-  const providerData = await getProviderByUsername(params.username);
+  const { username } = await params;
+  const providerData = await getProviderByUsername(username);
 
   if (!providerData || providerData.isSuspended) {
     notFound();

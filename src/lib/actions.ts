@@ -3,11 +3,11 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { addBooking, getProviderByUsername, updateProvider, getPlan, getAdminSettings, createPaymentRecord, updateBookingStatus, getBookingById, updateBooking, addNotification, getServiceById } from './data';
+import { addBooking, getProviderByUsername, updateProvider, getPlan, getAdminSettings, createPaymentRecord, updateBookingStatus, getBookingById, updateBooking, addNotification, getServiceBySlug } from './data';
 import type { Service, ServiceType, Booking, Plan, Provider, EnrichedProvider, PaymentGatewaySettings } from './types';
 import { BookingSchema } from './schema';
 import { format } from 'date-fns';
-import { formatInTimeZone, utcToZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 import { addDays, addMonths, addYears } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 import Razorpay from 'razorpay';
@@ -35,7 +35,7 @@ export async function createBooking(
     throw new Error('Provider not found.');
   }
 
-  const service = await getServiceById(provider.username, data.serviceId);
+  const service = await getServiceBySlug(provider.username, data.serviceSlug);
 
   const customerTimezone = (formData.get('customerTimezone') as string) || 'UTC';
 
@@ -55,7 +55,7 @@ export async function createBooking(
     dateTime: bookingDateTime,
     providerUsername: data.providerUsername,
     address: fullAddress || undefined,
-    serviceId: service?.id || null,
+    serviceSlug: service?.slug || null,
     quantity: data.quantity,
   };
 
@@ -290,7 +290,7 @@ export async function verifyBookingPayment(
     if (!booking) {
       throw new Error('Booking not found during verification.');
     }
-    const service = await getServiceById(providerUsername, booking.serviceId);
+    const service = await getServiceBySlug(providerUsername, booking.serviceSlug);
     
     // We need the customer's timezone which we don't have here. This is a limitation.
     // We'll proceed with sending emails, but they won't have the customer's local time.
@@ -589,7 +589,7 @@ export async function cancelBooking(provider: Provider, booking: Booking) {
     const dateFormat = provider.settings.dateFormat || 'PPP';
     const bookingDate = formatInTimeZone(booking.dateTime, timezone, dateFormat);
     const bookingTime = formatInTimeZone(booking.dateTime, timezone, 'p');
-    const service = await getServiceById(provider.username, booking.serviceId);
+    const service = await getServiceBySlug(provider.username, booking.serviceSlug);
 
     await sendBookingCancelledEmail(booking.customerEmail, {
       customerName: booking.customerName,
@@ -617,7 +617,7 @@ export async function rescheduleBooking(username: string, bookingId: string, new
       throw new Error("Provider or booking not found.");
     }
 
-    const service = await getServiceById(provider.username, booking.serviceId);
+    const service = await getServiceBySlug(provider.username, booking.serviceSlug);
 
     await updateBooking(username, bookingId, { dateTime: newDateTime });
 

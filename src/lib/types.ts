@@ -10,6 +10,7 @@ export type WorkingHours = {
 
 export type Service = {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   imageUrl: string;
@@ -21,6 +22,8 @@ export type Service = {
   assignedServiceTypes: ('online' | 'shop' | 'doorstep')[];
   quantityEnabled?: boolean;
   maxQuantity?: number;
+  included?: string[];
+  excluded?: string[];
 };
 
 
@@ -108,6 +111,11 @@ export type ProviderSettings = {
   enableServicesPage?: boolean;
   services?: Service[];
   paymentGateways?: PaymentGatewaySettings;
+  razorpay?: {
+    keyId: string;
+    keySecret: string;
+    enabled: boolean;
+  };
   testimonials?: {
     enabled: boolean;
     items: ProviderTestimonial[];
@@ -148,6 +156,7 @@ export type ProviderProfile = {
 
 export type Provider = ProviderProfile & {
   settings: ProviderSettings;
+  plan?: Plan | null;
 };
 
 export type EnrichedProvider = Provider & {
@@ -180,7 +189,7 @@ export type Booking = {
     amount?: number;
     status?: 'Paid' | 'Pending';
   };
-  serviceId?: string | null;
+  serviceSlug?: string | null;
   service?: Service; // Added for convenience when enriching booking data
   quantity?: number;
 };
@@ -199,7 +208,7 @@ export type BookingFormValues = {
   customerPhone: string;
   countryCode: string;
   serviceType?: string;
-  serviceId?: string;
+  serviceSlug?: string;
   flatHouseNo?: string;
   landmark?: string;
   pincode?: string;

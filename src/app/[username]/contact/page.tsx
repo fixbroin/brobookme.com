@@ -7,11 +7,12 @@ import type { Metadata } from 'next';
 import { Mail, MapPin, Phone } from "lucide-react";
 
 type Props = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const provider = await getProviderByUsername(params.username);
+  const { username } = await params;
+  const provider = await getProviderByUsername(username);
   if (!provider || !provider.settings.customPages?.contact?.enabled) {
     return { title: 'Not Found' };
   }
@@ -24,19 +25,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: pageTitle,
     description: description,
     alternates: {
-      canonical: `/${params.username}/contact`,
+      canonical: `/${username}/contact`,
     },
      openGraph: {
       title: pageTitle,
       description: description,
-      url: `/${params.username}/contact`,
+      url: `/${username}/contact`,
     }
   };
 }
 
 
 export default async function ProviderContactPage({ params }: Props) {
-    const provider = await getProviderByUsername(params.username);
+    const { username } = await params;
+    const provider = await getProviderByUsername(username);
 
     if (!provider || !provider.settings.customPages?.contact?.enabled) {
         notFound();

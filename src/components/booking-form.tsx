@@ -480,17 +480,19 @@ export function BookingForm({ provider }: { provider: Provider }) {
       }
     });
 
-    const serviceIdParam = searchParams.get('serviceId');
+    const serviceSlugParam = searchParams.get('serviceSlug');
     const quantityParam = searchParams.get('quantity');
     const savedStateJSON = localStorage.getItem(localStorageKey);
 
-    if (serviceIdParam) {
+    if (serviceSlugParam) {
       localStorage.removeItem(localStorageKey); 
-      const foundService = provider.settings.services?.find(s => s.id === serviceIdParam);
+      const foundService = provider.settings.services?.find(s => 
+        s.slug === serviceSlugParam || s.id === serviceSlugParam
+      );
       
       if (foundService) {
         setService(foundService);
-        setValue('serviceId', foundService.id);
+        setValue('serviceSlug', foundService.slug || foundService.id);
         setValue('quantity', quantityParam ? parseInt(quantityParam, 10) : 1);
       }
       
@@ -582,12 +584,12 @@ export function BookingForm({ provider }: { provider: Provider }) {
     return getAvailableSlots(selectedDate, dailyBookings, provider);
   }, [selectedDate, dailyBookings, provider, getAvailableSlots]);
   
-  const serviceIdParam = searchParams.get('serviceId');
+  const serviceSlugParam = searchParams.get('serviceSlug');
 
   const totalSteps = 4;
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => {
-    if (step === 1 && serviceIdParam) {
+    if (step === 1 && serviceSlugParam) {
         router.back();
     } else {
         setStep(s => (s > 1 ? s - 1 : 1));

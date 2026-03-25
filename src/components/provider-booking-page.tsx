@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/sheet';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Menu, Star, Expand, ChevronLeft, ChevronRight, Camera, Plus, Minus } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -160,24 +160,23 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
   const currency = useMemo(() => getCurrency(provider.settings.currency), [provider.settings.currency]);
   const services = useMemo(() => provider.settings.services?.filter(s => s.enabled).sort((a, b) => a.displayOrder - b.displayOrder) || [], [provider.settings.services]);
 
-  const handleQuantityChange = (serviceId: string, delta: number) => {
-      const newQty = (serviceQuantities[serviceId] || 1) + delta;
-      
+  const handleQuantityChange = (slug: string, delta: number) => {
+      const newQty = (serviceQuantities[slug] || 1) + delta;
+
       if (newQty < 1) return;
-  
-      const service = provider.settings.services?.find(s => s.id === serviceId);
+
+      const service = provider.settings.services?.find(s => s.slug === slug || s.id === slug);
       if (service?.maxQuantity && newQty > service.maxQuantity) {
         toast({
             title: 'Maximum Quantity Reached',
             description: `You cannot add more than ${service.maxQuantity} units for this service.`,
             variant: 'destructive',
         });
-        return; 
+        return;
       }
-      
-      setServiceQuantities(prev => ({ ...prev, [serviceId]: newQty }));
-    };
 
+      setServiceQuantities(prev => ({ ...prev, [slug]: newQty }));
+    };
 
   return (
     <motion.div
@@ -190,8 +189,17 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         <div className="flex h-14 items-center justify-between rounded-lg bg-background px-4 shadow-sm border">
             <Link href={`/${provider.username}`} className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                    <AvatarImage src={provider.logoUrl || logo.imageUrl} alt={provider.name} onContextMenu={(e) => e.preventDefault()} draggable={false} />
-                    <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
+                    <Image
+                        src={provider.logoUrl || logo.imageUrl}
+                        alt={provider.name}
+                        width={32}
+                        height={32}
+                        sizes="32px"
+                        className="aspect-square h-full w-full object-cover"
+                        onContextMenu={(e) => e.preventDefault()}
+                        draggable={false}
+                        priority
+                    />                    <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <h1 className="text-xl font-bold">{provider.name}</h1>
             </Link>
@@ -217,7 +225,13 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                 <SheetTitle>
                                     <div className="flex items-center gap-2">
                                          <Avatar className="h-8 w-8">
-                                            <AvatarImage src={provider.logoUrl || logo.imageUrl} alt={provider.name} />
+                                            <Image 
+                                                src={provider.logoUrl || logo.imageUrl} 
+                                                alt={provider.name} 
+                                                width={32}
+                                                height={32}
+                                                className="aspect-square h-full w-full object-cover"
+                                            />
                                             <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <h1 className="text-xl font-bold">{provider.name}</h1>
@@ -248,8 +262,17 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         <ScrollAnimation>
             <div className="mb-12 flex flex-col items-center text-center">
                 <Avatar className="h-36 w-36 mb-6 border-8 border-background shadow-2xl">
-                <AvatarImage src={provider.logoUrl || logo.imageUrl} alt={provider.name} data-ai-hint={logo.imageHint} onContextMenu={(e) => e.preventDefault()} draggable={false} />
-                <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
+                    <Image 
+                        src={provider.logoUrl || logo.imageUrl} 
+                        alt={provider.name} 
+                        width={144}
+                        height={144}
+                        className="aspect-square h-full w-full object-cover"
+                        onContextMenu={(e) => e.preventDefault()} 
+                        draggable={false} 
+                        priority
+                    />
+                    <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <h1 className="text-4xl font-bold tracking-tight">{provider.name}</h1>
                 <p className="mt-4 max-w-3xl text-lg text-muted-foreground">{provider.description}</p>
@@ -264,25 +287,29 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                 <ScrollAnimation delay={0.1}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {services.map(s => {
-                             const quantity = serviceQuantities[s.id] || 1;
+                             const slug = s.slug || s.id;
+                             const quantity = serviceQuantities[slug] || 1;
                              const totalPrice = (s.offerPrice ?? s.price) * quantity;
                              const buttonText = s.quantityEnabled && quantity > 1 ? `Book Now (${currency?.symbol}${totalPrice})` : 'Book Now';
 
                              return (
-                                <Card key={s.id} className="flex flex-col">
+                                <Card key={s.id} className="flex flex-col group overflow-hidden">
                                     <div className="p-4 flex flex-col flex-1">
-                                        <div className="aspect-square w-full relative mb-4">
+                                        <Link href={`/${provider.username}/services/${s.slug || s.id}`} className="aspect-square w-full relative mb-4 overflow-hidden rounded-lg">
                                             <Image
                                                 src={s.imageUrl}
                                                 alt={s.title}
                                                 fill
-                                                className="rounded-lg object-cover"
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                                                className="object-cover transition-transform duration-300 group-hover:scale-110"
                                                 onContextMenu={(e) => e.preventDefault()}
                                                 draggable={false}
                                             />
-                                        </div>
-                                        <h4 className="font-semibold">{s.title}</h4>
-                                        <p className="text-sm text-muted-foreground mt-1 flex-1">{s.description}</p>
+                                        </Link>
+                                        <Link href={`/${provider.username}/services/${s.slug || s.id}`}>
+                                            <h4 className="font-semibold hover:text-primary transition-colors">{s.title}</h4>
+                                        </Link>
+                                        <p className="text-sm text-muted-foreground mt-1 flex-1 line-clamp-2">{s.description}</p>
                                         <div className="text-lg font-bold mt-2">
                                             {s.offerPrice != null && s.offerPrice < s.price ? (
                                                 <span><span className="line-through text-muted-foreground text-sm">{currency?.symbol}{s.price}</span> {currency?.symbol}{s.offerPrice}</span>
@@ -293,20 +320,28 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                         <div className="mt-4 flex flex-col gap-2">
                                             {s.quantityEnabled && (
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(s.id, -1)}><Minus/></Button>
+                                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(slug, -1)}><Minus/></Button>
                                                     <span className="font-bold text-lg w-10 text-center">{quantity}</span>
-                                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(s.id, 1)}><Plus/></Button>
+                                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(slug, 1)}><Plus/></Button>
                                                 </div>
                                             )}
-                                            <Button asChild className="w-full">
-                                                <Link href={`/${provider.username}/book?serviceId=${s.id}${s.quantityEnabled ? '&quantity=' + quantity : ''}`}>
-                                                    {buttonText}
-                                                </Link>
-                                            </Button>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Button asChild variant="outline" className="w-full">
+                                                    <Link href={`/${provider.username}/services/${s.slug || s.id}`}>
+                                                        Details
+                                                    </Link>
+                                                </Button>
+                                                <Button asChild className="w-full">
+                                                    <Link href={`/${provider.username}/book?serviceSlug=${s.slug || s.id}${s.quantityEnabled ? '&quantity=' + quantity : ''}`}>
+                                                        {buttonText}
+                                                    </Link>
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </Card>
-                            )
+                             )
+
                         })}
                     </div>
                 </ScrollAnimation>
@@ -410,7 +445,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                 >
                                     <CardContent className="p-0">
                                         <div className="aspect-video relative">
-                                            <Image src={item.imageUrl} alt={item.title || 'Gallery image'} fill className="object-cover" onContextMenu={(e) => e.preventDefault()} draggable={false} />
+                                            <Image src={item.imageUrl} alt={item.title || 'Gallery image'} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" onContextMenu={(e) => e.preventDefault()} draggable={false} />
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                                                 <Expand className="h-10 w-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                             </div>
@@ -452,6 +487,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
       <Dialog open={selectedImageIndex !== null} onOpenChange={(isOpen) => !isOpen && setSelectedImageIndex(null)}>
         <DialogContent className="p-2 m-0 w-full max-w-6xl h-auto bg-transparent border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0">
           <DialogTitle className="sr-only">Full screen gallery view</DialogTitle>
+          <DialogDescription className="sr-only">Detailed view of the gallery image.</DialogDescription>
           {selectedImageIndex !== null && (
             <div className="relative w-full h-auto max-h-[90vh]">
               <Image
@@ -459,6 +495,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                 alt={galleryItems[selectedImageIndex].title || "Full screen gallery view"}
                 width={1920}
                 height={1080}
+                sizes="100vw"
                 className="w-full h-full object-contain rounded-lg"
                 onContextMenu={(e) => e.preventDefault()}
                 draggable={false}

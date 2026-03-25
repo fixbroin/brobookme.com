@@ -17,6 +17,7 @@ const defaultServiceTypes: ServiceTypeSetting[] = [
 const defaultServices: Service[] = [
     {
       id: uuidv4(),
+      slug: 'standard-consultation',
       title: 'Standard Consultation',
       description: 'A 45-minute one-on-one consultation to discuss your needs.',
       imageUrl: 'https://picsum.photos/seed/consult/400/250',
@@ -30,6 +31,7 @@ const defaultServices: Service[] = [
     },
      {
       id: uuidv4(),
+      slug: 'premium-on-site-service',
       title: 'Premium On-Site Service',
       description: 'A premium service delivered at your location.',
       imageUrl: 'https://picsum.photos/seed/premium/400/250',
@@ -229,13 +231,13 @@ export async function getBookingById(username: string, bookingId: string): Promi
     } as Booking;
 }
 
-export async function getServiceById(username: string, serviceId?: string | null): Promise<Service | null> {
-    if (!serviceId) return null;
+export async function getServiceBySlug(username: string, slug?: string | null): Promise<Service | null> {
+    if (!slug) return null;
     const provider = await getProviderByUsername(username);
     if (!provider || !provider.settings.services) {
         return null;
     }
-    return provider.settings.services.find(s => s.id === serviceId) || null;
+    return provider.settings.services.find(s => s.slug === slug || s.id === slug) || null;
 }
 
 export async function getBookingsForDay(username: string, date: Date): Promise<Booking[]> {

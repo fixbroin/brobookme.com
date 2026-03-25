@@ -186,6 +186,12 @@ function SubscriptionComponent() {
         return;
       }
 
+      if (typeof window.Razorpay === 'undefined') {
+        toast({ title: 'Error', description: 'Payment gateway script not fully loaded. Please try again.', variant: 'destructive'});
+        setProcessingPlanId(null);
+        return;
+      }
+
       const options = {
         key: razorpaySettings.keyId,
         amount: order.amount,

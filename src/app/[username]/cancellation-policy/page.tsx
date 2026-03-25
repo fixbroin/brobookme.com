@@ -6,11 +6,12 @@ import { PublicPageLayout } from "../_components/public-page-layout";
 import type { Metadata } from 'next';
 
 type Props = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const provider = await getProviderByUsername(params.username);
+  const { username } = await params;
+  const provider = await getProviderByUsername(username);
   if (!provider || !provider.settings.customPages?.cancellationPolicy?.enabled) {
     return { title: 'Not Found' };
   }
@@ -22,19 +23,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: pageTitle,
     description: policySettings.description?.substring(0, 160) || `Read our cancellation policy.`,
     alternates: {
-      canonical: `/${params.username}/cancellation-policy`,
+      canonical: `/${username}/cancellation-policy`,
     },
     openGraph: {
       title: pageTitle,
       description: policySettings.description?.substring(0, 160),
-      url: `/${params.username}/cancellation-policy`,
+      url: `/${username}/cancellation-policy`,
     }
   };
 }
 
 
 export default async function ProviderCancellationPolicyPage({ params }: Props) {
-    const provider = await getProviderByUsername(params.username);
+    const { username } = await params;
+    const provider = await getProviderByUsername(username);
 
     if (!provider || !provider.settings.customPages?.cancellationPolicy?.enabled) {
         notFound();
