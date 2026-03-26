@@ -11,6 +11,7 @@ import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 import { addDays, addMonths, addYears } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 import Razorpay from 'razorpay';
+import Stripe from 'stripe';
 import crypto from 'crypto';
 import { sendSubscriptionEmail, sendBookingConfirmationEmail, sendProviderBookingNotificationEmail, sendBookingCancelledEmail, sendRescheduleEmail, sendProviderRescheduleEmail } from './email-templates';
 import { createGoogleCalendarEvent } from './calendar.actions';
@@ -18,7 +19,7 @@ import { createGoogleCalendarEvent } from './calendar.actions';
 
 export async function createBooking(
   formData: FormData
-): Promise<{ errors?: any, order?: any, bookingId?: string, confirmationParams?: any, customPaymentLink?: string } | void> {
+): Promise<{ errors?: any, order?: any, bookingId?: string, confirmationParams?: any, customPaymentLink?: string, stripeSessionUrl?: string | null } | void> {
   const rawData = Object.fromEntries(formData.entries());
   
   const parsed = BookingSchema.safeParse(rawData);
@@ -105,23 +106,41 @@ export async function createBooking(
   confirmationParams.set('currencyCode', provider.settings.currency);
 
   const razorpaySettings = provider.settings.paymentGateways?.razorpay;
+  const stripeSettings = provider.settings.paymentGateways?.stripe;
 
   if (isPaidService && data.paymentMethod === 'online') {
-      const keyId = razorpaySettings?.keyId;
-      const keySecret = razorpaySettings?.keySecret;
-      const isEnabled = razorpaySettings?.enabled;
-
-      if (isEnabled && keyId && keySecret) {
+      // 1. Handle Razorpay
+      if (razorpaySettings?.enabled && razorpaySettings.keyId && razorpaySettings.keySecret) {
           try {
               const order = await createRazorpayOrder(price!, provider.settings.currency, bookingId, { 
-                  keyId, 
-                  keySecret 
+                  keyId: razorpaySettings.keyId, 
+                  keySecret: razorpaySettings.keySecret 
               });
               await updateBooking(provider.username, bookingId, { payment: { orderId: order.id } });
               return { order, bookingId, confirmationParams: confirmationParams.toString() };
           } catch (error: any) {
               console.error("Razorpay Order Error:", error);
               return { errors: { payment: [error.message || "Failed to initiate payment. Please try again or contact the provider."] } };
+          }
+      }
+      
+      // 2. Handle Stripe
+      if (stripeSettings?.enabled && stripeSettings.secretKey) {
+          try {
+              const session = await createStripeCheckoutSession(
+                  price!,
+                  provider.settings.currency,
+                  bookingId,
+                  provider.username,
+                  { secretKey: stripeSettings.secretKey },
+                  { name: data.customerName, email: data.customerEmail },
+                  service?.title || booking.serviceType
+              );
+              await updateBooking(provider.username, bookingId, { payment: { orderId: session.id } });
+              return { stripeSessionUrl: session.url, bookingId };
+          } catch (error: any) {
+              console.error("Stripe Session Error:", error);
+              return { errors: { payment: [error.message || "Failed to initiate payment session. Please try again."] } };
           }
       }
       
@@ -545,6 +564,61 @@ export async function testRazorpayConnection(keyId: string, keySecret: string) {
         const errorMessage = error.error?.description || error.message || 'Authentication failed. Please check your Key ID and Secret.';
         return { success: false, error: errorMessage };
     }
+}
+
+export async function testStripeConnection(secretKey: string) {
+    try {
+        const stripe = new Stripe(secretKey.trim());
+        
+        // Simple call to verify credentials
+        await stripe.accounts.retrieve();
+        
+        return { success: true };
+    } catch (error: any) {
+        console.error('Stripe Test Connection Failed:', error);
+        const errorMessage = error.message || 'Authentication failed. Please check your Secret Key.';
+        return { success: false, error: errorMessage };
+    }
+}
+
+export async function createStripeCheckoutSession(
+    amount: number, 
+    currency: string, 
+    bookingId: string, 
+    providerUsername: string,
+    keys: { secretKey: string; },
+    customerDetails: { name: string; email: string; },
+    serviceTitle: string
+) {
+    const stripe = new Stripe(keys.secretKey.trim());
+    
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+            {
+                price_data: {
+                    currency: currency.toLowerCase() || 'inr',
+                    product_data: {
+                        name: serviceTitle,
+                        description: `Booking ID: ${bookingId}`,
+                    },
+                    unit_amount: Math.round(amount * 100),
+                },
+                quantity: 1,
+            },
+        ],
+        mode: 'payment',
+        success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/confirmation?bookingId=${bookingId}&providerUsername=${providerUsername}&status=success`,
+        cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/${providerUsername}?bookingId=${bookingId}&status=canceled`,
+        customer_email: customerDetails.email,
+        client_reference_id: bookingId,
+        metadata: {
+            bookingId,
+            providerUsername,
+        },
+    });
+
+    return session;
 }
 
 export async function createRazorpayOrder(amount: number, currency: string, id: string, keys?: { keyId: string; keySecret: string; }) {

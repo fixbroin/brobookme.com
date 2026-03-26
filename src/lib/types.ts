@@ -388,6 +388,7 @@ export type PaymentGatewaySettings = {
         enabled: boolean;
         publicKey: string;
         secretKey: string;
+        webhookSecret?: string;
     },
     paypal: {
         enabled: boolean;

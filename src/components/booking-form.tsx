@@ -701,6 +701,8 @@ export function BookingForm({ provider }: { provider: Provider }) {
                  setProcessingMethod(null);
             });
             rzp.open();
+        } else if (result?.stripeSessionUrl) {
+            window.location.href = result.stripeSessionUrl;
         } else {
             // Free booking flow or custom payment link is handled by server-side redirect in createBooking
         }
@@ -872,7 +874,8 @@ export function BookingForm({ provider }: { provider: Provider }) {
     
     const isPaidService = !!(price && price > 0);
     const razorpay = provider.settings.paymentGateways?.razorpay;
-    const hasProviderGateway = !!(razorpay?.enabled && razorpay?.keyId && razorpay?.keySecret);
+    const stripe = provider.settings.paymentGateways?.stripe;
+    const hasProviderGateway = !!((razorpay?.enabled && razorpay?.keyId && razorpay?.keySecret) || (stripe?.enabled && stripe?.secretKey));
     const onlinePayment = provider.settings.onlinePaymentEnabled && hasProviderGateway;
     const payAfterService = provider.settings.payAfterServiceEnabled;
 
