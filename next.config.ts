@@ -4,6 +4,9 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   reactCompiler: true,
   /* config options here */
+  turbopack: {
+    root: typeof process !== 'undefined' ? process.cwd() : '.',
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
