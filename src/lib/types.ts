@@ -111,11 +111,6 @@ export type ProviderSettings = {
   enableServicesPage?: boolean;
   services?: Service[];
   paymentGateways?: PaymentGatewaySettings;
-  razorpay?: {
-    keyId: string;
-    keySecret: string;
-    enabled: boolean;
-  };
   testimonials?: {
     enabled: boolean;
     items: ProviderTestimonial[];
