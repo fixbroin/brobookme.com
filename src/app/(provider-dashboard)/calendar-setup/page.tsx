@@ -151,7 +151,7 @@ export default function CalendarSetupPage() {
             if(result.success) {
                 toast({ title: 'Success', description: `Disconnected from ${type === 'google' ? 'Google' : 'Outlook'} Calendar.` });
                  // Re-fetch provider data
-                 getProviderByUsername(username).then(setProvider);
+                 getProviderByUsername(username).then((data) => setProvider(data || null));
             } else {
                  toast({ title: 'Error', description: result.error, variant: 'destructive' });
             }

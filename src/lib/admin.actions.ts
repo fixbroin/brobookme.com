@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -13,6 +12,8 @@ import { sendAccountStatusEmail, sendExpiryReminderEmail as sendReminderEmailTem
 import { ref, uploadString, getDownloadURL, deleteObject, uploadBytesResumable } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { doc, writeBatch } from 'firebase/firestore';
+import Razorpay from 'razorpay';
+import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
 const razorpaySchema = z.object({
@@ -69,6 +70,24 @@ const brandingSettingsSchema = z.object({
 });
 
 
+export async function testAdminRazorpayConnection(keyId: string, keySecret: string) {
+    try {
+        const razorpay = new Razorpay({
+            key_id: keyId.trim(),
+            key_secret: keySecret.trim(),
+        });
+        
+        // Attempt a simple API call to verify credentials
+        await razorpay.orders.all({ count: 1 });
+        
+        return { success: true };
+    } catch (error: any) {
+        console.error('Admin Razorpay Test Connection Failed:', error);
+        const errorMessage = error.error?.description || error.message || 'Authentication failed. Please check your Key ID and Secret.';
+        return { success: false, error: errorMessage };
+    }
+}
+
 export async function updatePaymentSettings(data: RazorpaySettings) {
   const parsed = razorpaySchema.safeParse(data);
 
@@ -87,7 +106,7 @@ export async function updatePaymentSettings(data: RazorpaySettings) {
         settingsToUpdate.webhookSecret = parsed.data.webhookSecret;
      }
      
-    await updateAdminSettings({ razorpay: settingsToUpdate });
+    await updateAdminSettings({ razorpay: settingsToUpdate as any });
     revalidatePath('/admin/settings');
     return { success: true };
   } catch (error) {
@@ -109,7 +128,7 @@ export async function updateEmailSettings(data: SmtpSettings) {
         if (!parsed.data.password) {
             delete (settingsToUpdate as any).password;
         }
-        await updateAdminSettings({ smtp: settingsToUpdate });
+        await updateAdminSettings({ smtp: settingsToUpdate as any });
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
@@ -130,7 +149,7 @@ export async function updateApiSettings(type: 'googleApi' | 'outlookApi', data: 
         if (!parsed.data.clientSecret) {
             delete (settingsToUpdate as any).clientSecret;
         }
-        await updateAdminSettings({ [type]: settingsToUpdate });
+        await updateAdminSettings({ [type]: settingsToUpdate as any });
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
@@ -523,5 +542,25 @@ export async function updateFloatingButtonsSettings(data: FloatingButtonsSetting
     } catch (error: any) {
         console.error("Error updating floating buttons settings:", error);
         return { success: false, error: "Could not save settings." };
+    }
+}
+
+export async function testSmtpConnection(data: SmtpSettings) {
+    try {
+        const transporter = nodemailer.createTransport({
+            host: data.host,
+            port: data.port,
+            secure: data.port === 465,
+            auth: {
+                user: data.username,
+                pass: data.password,
+            },
+        });
+
+        await transporter.verify();
+        return { success: true };
+    } catch (error: any) {
+        console.error('SMTP Test Connection Failed:', error);
+        return { success: false, error: error.message || 'Failed to connect to SMTP server.' };
     }
 }

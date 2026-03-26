@@ -126,7 +126,7 @@ export default function AdminPlansPage() {
 
     // Handle optional offerPrice
     const offerPriceValue = currentPlan.offerPrice;
-    if (offerPriceValue !== null && offerPriceValue !== undefined && offerPriceValue !== '' && !isNaN(Number(offerPriceValue))) {
+    if (offerPriceValue !== null && offerPriceValue !== undefined && String(offerPriceValue) !== '' && !isNaN(Number(offerPriceValue))) {
         data.offerPrice = Number(offerPriceValue);
     } else {
         data.offerPrice = null;

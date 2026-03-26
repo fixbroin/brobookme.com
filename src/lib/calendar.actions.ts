@@ -23,7 +23,7 @@ async function getGoogleOAuth2Client() {
     );
 }
 
-export async function getGoogleAuthUrl(username: string) {
+export async function getGoogleAuthUrl(username: string): Promise<{ success: boolean; url?: string; error?: string }> {
     try {
         const oauth2Client = await getGoogleOAuth2Client();
         const scopes = [
@@ -168,7 +168,7 @@ export async function createGoogleCalendarEvent(provider: Provider, booking: Boo
 
 // --- Outlook Calendar (Placeholder) ---
 
-export async function getOutlookAuthUrl() {
+export async function getOutlookAuthUrl(): Promise<{ success: boolean; url?: string; error?: string }> {
     // This is a placeholder. A real implementation requires the MSAL library.
     const settings = await getAdminSettings();
     if (!settings?.outlookApi?.clientId) {

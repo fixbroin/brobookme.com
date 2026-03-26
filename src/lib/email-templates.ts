@@ -80,8 +80,21 @@ export async function sendBookingConfirmationEmail(to: string, data: {
         subject: `Booking Confirmed with ${data.providerName}`,
         template: 'booking_email.html',
         data: {
-            ...data,
+            customerName: data.customerName,
+            providerName: data.providerName,
             serviceTitle: serviceTitleWithQuantity,
+            serviceType: data.serviceType,
+            quantity: String(data.quantity || ''),
+            bookingDate: data.bookingDate,
+            bookingTime: data.bookingTime,
+            bookingTimeProvider: data.bookingTimeProvider,
+            bookingAddress: data.bookingAddress,
+            googleLink: data.googleLink,
+            outlookLink: data.outlookLink,
+            icsLink: data.icsLink,
+            paymentDetails: data.paymentDetails,
+            googleMeetLink: data.googleMeetLink || '',
+            googleMapLink: data.googleMapLink || '',
             locationDetails: locationDetails,
         }
     });
@@ -118,8 +131,19 @@ export async function sendProviderBookingNotificationEmail(to: string, data: {
         subject: `New Booking from ${data.customerName}`,
         template: 'provider_booking_notification.html',
         data: {
-            ...data,
+            providerName: data.providerName,
+            customerName: data.customerName,
+            customerEmail: data.customerEmail,
+            customerPhone: data.customerPhone,
             serviceTitle: serviceTitleWithQuantity,
+            serviceType: data.serviceType,
+            quantity: String(data.quantity || ''),
+            bookingDate: data.bookingDate,
+            bookingTime: data.bookingTime,
+            bookingAddress: data.bookingAddress,
+            paymentDetails: data.paymentDetails,
+            googleMeetLink: data.googleMeetLink || '',
+            googleMapLink: data.googleMapLink || '',
             locationDetails: locationDetails,
         }
     });

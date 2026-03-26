@@ -8,10 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getAdminSettings } from '@/lib/data';
-import { updatePaymentSettings, updateEmailSettings, updateApiSettings } from '@/lib/admin.actions';
+import { updatePaymentSettings, updateEmailSettings, updateApiSettings, testAdminRazorpayConnection, testSmtpConnection } from '@/lib/admin.actions';
 import type { RazorpaySettings, SmtpSettings, GoogleApiSettings, OutlookApiSettings } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck, CheckCircle2, XCircle, MailCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function AdminSettingsPage() {
@@ -19,25 +19,35 @@ export default function AdminSettingsPage() {
     const [smtpSettings, setSmtpSettings] = useState<SmtpSettings>({ host: '', port: 587, senderEmail: '', username: '', password: '' });
     const [googleApiSettings, setGoogleApiSettings] = useState<GoogleApiSettings>({ clientId: '', clientSecret: '', redirectUri: '' });
     const [outlookApiSettings, setOutlookApiSettings] = useState<OutlookApiSettings>({ clientId: '', clientSecret: '', redirectUri: '' });
+    const [webhookUrl, setWebhookUrl] = useState('');
 
     const [loading, setLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
+    const [isTesting, setIsTesting] = useState(false);
+    const [isTestingSmtp, setIsTestingSmtp] = useState(false);
+    const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+    const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null);
     const { toast } = useToast();
 
     useEffect(() => {
+        setWebhookUrl(`${window.location.origin}/api/webhooks/razorpay`);
         getAdminSettings().then(settings => {
             if (settings) {
                 if (settings.razorpay) {
-                    setRazorpaySettings(s => ({...s, keyId: settings.razorpay?.keyId || ''}));
+                    setRazorpaySettings({
+                        keyId: settings.razorpay.keyId || '',
+                        keySecret: settings.razorpay.keySecret || '',
+                        webhookSecret: settings.razorpay.webhookSecret || '',
+                    });
                 }
                 if (settings.smtp) {
-                    setSmtpSettings(s => ({
-                        ...s,
-                        host: settings.smtp?.host || '',
-                        port: settings.smtp?.port || 587,
-                        senderEmail: settings.smtp?.senderEmail || '',
-                        username: settings.smtp?.username || ''
-                    }));
+                    setSmtpSettings({
+                        host: settings.smtp.host || '',
+                        port: settings.smtp.port || 587,
+                        senderEmail: settings.smtp.senderEmail || '',
+                        username: settings.smtp.username || '',
+                        password: settings.smtp.password || '',
+                    });
                 }
                 if (settings.googleApi) {
                     setGoogleApiSettings(settings.googleApi);
@@ -50,19 +60,61 @@ export default function AdminSettingsPage() {
         });
     }, []);
 
+    const handleTestConnection = async () => {
+        if (!razorpaySettings.keyId || !razorpaySettings.keySecret) {
+            toast({ title: "Required", description: "Please enter both Key ID and Key Secret to test.", variant: "destructive" });
+            return;
+        }
+
+        setIsTesting(true);
+        setTestResult(null);
+        try {
+            const result = await testAdminRazorpayConnection(razorpaySettings.keyId, razorpaySettings.keySecret);
+            if (result.success) {
+                setTestResult({ success: true, message: "Connection successful! Your keys are valid." });
+                toast({ title: "Success", description: "Razorpay connection verified!" });
+            } else {
+                setTestResult({ success: false, message: result.error || "Authentication failed." });
+                toast({ title: "Connection Failed", description: result.error, variant: "destructive" });
+            }
+        } catch (error: any) {
+            setTestResult({ success: false, message: "An unexpected error occurred." });
+        } finally {
+            setIsTesting(false);
+        }
+    };
+
+    const handleTestSmtpConnection = async () => {
+        if (!smtpSettings.host || !smtpSettings.username || !smtpSettings.password) {
+            toast({ title: "Required", description: "Please enter Host, Username and Password to test.", variant: "destructive" });
+            return;
+        }
+
+        setIsTestingSmtp(true);
+        setSmtpTestResult(null);
+        try {
+            const result = await testSmtpConnection(smtpSettings);
+            if (result.success) {
+                setSmtpTestResult({ success: true, message: "SMTP Connection successful! Your settings are valid." });
+                toast({ title: "Success", description: "SMTP connection verified!" });
+            } else {
+                setSmtpTestResult({ success: false, message: result.error || "Connection failed." });
+                toast({ title: "Connection Failed", description: result.error, variant: "destructive" });
+            }
+        } catch (error: any) {
+            setSmtpTestResult({ success: false, message: "An unexpected error occurred." });
+        } finally {
+            setIsTestingSmtp(false);
+        }
+    };
+
     const handleSaveSettings = (type: 'payment' | 'email' | 'googleApi' | 'outlookApi') => {
         startTransition(async () => {
             let result;
             if (type === 'payment') {
                 result = await updatePaymentSettings(razorpaySettings);
-                if (result.success) {
-                    setRazorpaySettings(s => ({...s, keySecret: '', webhookSecret: ''}));
-                }
             } else if (type === 'email') {
                 result = await updateEmailSettings(smtpSettings);
-                if (result.success) {
-                    setSmtpSettings(s => ({...s, password: ''}));
-                }
             } else if (type === 'googleApi') {
                  result = await updateApiSettings('googleApi', googleApiSettings);
                  if (result.success) {
@@ -126,10 +178,36 @@ export default function AdminSettingsPage() {
                                 <Label htmlFor="razorpayWebhookSecret">Razorpay Webhook Secret</Label>
                                 <Input id="razorpayWebhookSecret" type="password" placeholder="Enter new webhook secret to update" value={razorpaySettings.webhookSecret} onChange={e => setRazorpaySettings({...razorpaySettings, webhookSecret: e.target.value})} />
                             </div>
-                            <Button onClick={() => handleSaveSettings('payment')} disabled={isPending}>
-                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Payment Settings
-                            </Button>
+
+                            {testResult && (
+                                <Alert variant={testResult.success ? "default" : "destructive"} className={testResult.success ? "border-green-500 bg-green-50 dark:bg-green-900/10" : ""}>
+                                    {testResult.success ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4" />}
+                                    <AlertTitle>{testResult.success ? "Valid Credentials" : "Connection Failed"}</AlertTitle>
+                                    <AlertDescription>{testResult.message}</AlertDescription>
+                                </Alert>
+                            )}
+
+                            <div className="space-y-2 pt-4 border-t">
+                                <Label>Webhook URL</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input readOnly value={webhookUrl} className="bg-muted" />
+                                    <Button variant="outline" size="sm" onClick={() => {
+                                        navigator.clipboard.writeText(webhookUrl);
+                                        toast({ title: "Copied", description: "Webhook URL copied to clipboard." });
+                                    }}>Copy</Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Configure this URL in your Razorpay Dashboard under Settings &gt; Webhooks.</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={handleTestConnection} disabled={isTesting || !razorpaySettings.keyId}>
+                                    {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                                    Test Connection
+                                </Button>
+                                <Button onClick={() => handleSaveSettings('payment')} disabled={isPending}>
+                                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Payment Settings
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -170,10 +248,25 @@ export default function AdminSettingsPage() {
                                     <Input id="smtpPassword" type="password" placeholder="Enter new password to update" value={smtpSettings.password} onChange={e => setSmtpSettings({...smtpSettings, password: e.target.value})} />
                                 </div>
                             </div>
-                            <Button onClick={() => handleSaveSettings('email')} disabled={isPending}>
-                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Email Settings
-                            </Button>
+
+                            {smtpTestResult && (
+                                <Alert variant={smtpTestResult.success ? "default" : "destructive"} className={smtpTestResult.success ? "border-green-500 bg-green-50 dark:bg-green-900/10" : ""}>
+                                    {smtpTestResult.success ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4" />}
+                                    <AlertTitle>{smtpTestResult.success ? "Connection Successful" : "Connection Failed"}</AlertTitle>
+                                    <AlertDescription>{smtpTestResult.message}</AlertDescription>
+                                </Alert>
+                            )}
+
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={handleTestSmtpConnection} disabled={isTestingSmtp || !smtpSettings.host}>
+                                    {isTestingSmtp ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MailCheck className="mr-2 h-4 w-4" />}
+                                    Test Connection
+                                </Button>
+                                <Button onClick={() => handleSaveSettings('email')} disabled={isPending}>
+                                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Email Settings
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>

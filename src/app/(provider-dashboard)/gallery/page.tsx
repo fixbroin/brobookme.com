@@ -142,7 +142,11 @@ export default function GalleryPage() {
         updatedItems = [...existingItems, finalItem];
       }
       
-      const gallerySettings = { ...provider.settings.gallery, items: updatedItems };
+      const gallerySettings = { 
+        enabled: provider.settings.gallery?.enabled ?? true,
+        title: provider.settings.gallery?.title || 'Our Work Gallery',
+        items: updatedItems 
+      };
       await updateProvider(provider.username, { settings: { ...provider.settings, gallery: gallerySettings } });
       toast({ title: 'Success', description: 'Gallery item saved.' });
       setProvider(p => p ? { ...p, settings: { ...p.settings, gallery: gallerySettings } } : null);
@@ -161,7 +165,11 @@ export default function GalleryPage() {
     try {
         const itemToDelete = provider.settings.gallery?.items.find(i => i.id === currentItem.id);
         const updatedItems = (provider.settings.gallery?.items || []).filter(i => i.id !== currentItem.id);
-        const gallerySettings = { ...provider.settings.gallery, items: updatedItems };
+        const gallerySettings = { 
+            enabled: provider.settings.gallery?.enabled ?? true, 
+            title: provider.settings.gallery?.title || 'Our Work Gallery',
+            items: updatedItems 
+        };
         await updateProvider(provider.username, { settings: { ...provider.settings, gallery: gallerySettings } });
         if (itemToDelete?.imageUrl && itemToDelete.imageUrl.includes('firebasestorage')) {
             const imageRef = ref(storage, itemToDelete.imageUrl);

@@ -104,35 +104,28 @@ export async function createBooking(
   confirmationParams.set('customerTimezone', customerTimezone);
   confirmationParams.set('currencyCode', provider.settings.currency);
 
-  const providerGateways = provider.settings.paymentGateways;
-  const activeProviderGateway = providerGateways 
-    ? Object.keys(providerGateways).find(key => providerGateways[key as keyof typeof providerGateways]?.enabled)
-    : null;
+  const razorpaySettings = provider.settings.paymentGateways?.razorpay;
 
   if (isPaidService && data.paymentMethod === 'online') {
-      if (activeProviderGateway === 'custom' && providerGateways?.custom.paymentLink) {
-          await updateBooking(provider.username, bookingId, { status: 'Pending' });
-          return { customPaymentLink: providerGateways.custom.paymentLink };
+      const keyId = razorpaySettings?.keyId;
+      const keySecret = razorpaySettings?.keySecret;
+      const isEnabled = razorpaySettings?.enabled;
+
+      if (isEnabled && keyId && keySecret) {
+          try {
+              const order = await createRazorpayOrder(price!, provider.settings.currency, bookingId, { 
+                  keyId, 
+                  keySecret 
+              });
+              await updateBooking(provider.username, bookingId, { payment: { orderId: order.id } });
+              return { order, bookingId, confirmationParams: confirmationParams.toString() };
+          } catch (error: any) {
+              console.error("Razorpay Order Error:", error);
+              return { errors: { payment: [error.message || "Failed to initiate payment. Please try again or contact the provider."] } };
+          }
       }
       
-      if (activeProviderGateway && providerGateways && activeProviderGateway in providerGateways) {
-        const gateway = providerGateways[activeProviderGateway as keyof PaymentGatewaySettings];
-        if (gateway && 'keyId' in gateway && gateway.keyId && 'keySecret' in gateway && gateway.keySecret) {
-            const order = await createRazorpayOrder(price!, provider.settings.currency, bookingId, { keyId: gateway.keyId, keySecret: gateway.keySecret });
-            await updateBooking(provider.username, bookingId, { payment: { orderId: order.id } });
-            return { order, bookingId, confirmationParams: confirmationParams.toString() };
-        }
-      }
-      
-      // Fallback to admin gateway if provider's is not set up correctly
-      const adminSettings = await getAdminSettings();
-      if (adminSettings?.razorpay?.keyId && adminSettings.razorpay.keySecret) {
-         const order = await createRazorpayOrder(price!, provider.settings.currency, bookingId, { keyId: adminSettings.razorpay.keyId, keySecret: adminSettings.razorpay.keySecret });
-         await updateBooking(provider.username, bookingId, { payment: { orderId: order.id } });
-         return { order, bookingId, confirmationParams: confirmationParams.toString() };
-      } else {
-        return { errors: { payment: ["Online payment is currently unavailable."] } };
-      }
+      return { errors: { payment: ["Online payment is currently unavailable. Provider has not completed their Payment Setup."] } };
 
   } else {
     // This handles free bookings or "Pay Later"
@@ -250,26 +243,11 @@ export async function verifyBookingPayment(
     throw new Error('Provider not found during verification.');
   }
 
-  const activeProviderGateway = provider.settings.paymentGateways 
-    ? Object.keys(provider.settings.paymentGateways).find(key => provider.settings.paymentGateways![key as keyof PaymentGatewaySettings]?.enabled)
-    : null;
-
-  let keySecret: string | undefined;
-
-  if (activeProviderGateway && provider.settings.paymentGateways && activeProviderGateway in provider.settings.paymentGateways) {
-    const gateway = provider.settings.paymentGateways[activeProviderGateway as keyof PaymentGatewaySettings];
-    if (gateway && 'keySecret' in gateway) {
-      keySecret = gateway.keySecret;
-    }
-  }
+  const razorpay = provider.settings.paymentGateways?.razorpay;
+  const keySecret = razorpay?.enabled ? razorpay.keySecret : undefined;
 
   if (!keySecret) {
-    const adminSettings = await getAdminSettings();
-    keySecret = adminSettings?.razorpay?.keySecret;
-  }
-
-  if (!keySecret) {
-    throw new Error('Razorpay key secret is not configured.');
+    throw new Error('Provider Razorpay key secret is not configured.');
   }
 
 
@@ -403,7 +381,10 @@ export async function verifyBookingPayment(
         googleMapLink: provider.settings.googleMapLink,
     });
 
-    const result = { success: true, confirmationParams: new URLSearchParams() };
+    const result: { success: boolean; confirmationParams: URLSearchParams; error?: string } = { 
+        success: true, 
+        confirmationParams: new URLSearchParams() 
+    };
     if (googleMeetLink) {
         result.confirmationParams.set('googleMeetLink', googleMeetLink);
     }
@@ -547,37 +528,65 @@ export async function updateProviderSubscription(
   }
 }
 
+export async function testRazorpayConnection(keyId: string, keySecret: string) {
+    try {
+        const razorpay = new Razorpay({
+            key_id: keyId.trim(),
+            key_secret: keySecret.trim(),
+        });
+        
+        // Attempt a simple API call to verify credentials
+        // Fetching orders with a count of 1 is a safe way to check if keys work
+        await razorpay.orders.all({ count: 1 });
+        
+        return { success: true };
+    } catch (error: any) {
+        console.error('Razorpay Test Connection Failed:', error);
+        const errorMessage = error.error?.description || error.message || 'Authentication failed. Please check your Key ID and Secret.';
+        return { success: false, error: errorMessage };
+    }
+}
+
 export async function createRazorpayOrder(amount: number, currency: string, id: string, keys?: { keyId: string; keySecret: string; }) {
-    let razorpay: Razorpay;
+    let key_id: string;
+    let key_secret: string;
+
     if (keys) {
-      razorpay = new Razorpay({
-        key_id: keys.keyId,
-        key_secret: keys.keySecret,
-      });
+        key_id = keys.keyId.trim();
+        key_secret = keys.keySecret.trim();
     } else {
-      const adminSettings = await getAdminSettings();
-      if (!adminSettings?.razorpay?.keyId || !adminSettings?.razorpay?.keySecret) {
-          throw new Error('Razorpay settings not configured.');
-      }
-      razorpay = new Razorpay({
-          key_id: adminSettings.razorpay.keyId,
-          key_secret: adminSettings.razorpay.keySecret,
-      });
+        const adminSettings = await getAdminSettings();
+        if (!adminSettings?.razorpay?.keyId || !adminSettings?.razorpay?.keySecret) {
+            throw new Error('Admin Razorpay settings not configured.');
+        }
+        key_id = adminSettings.razorpay.keyId.trim();
+        key_secret = adminSettings.razorpay.keySecret.trim();
     }
 
+    if (!key_id || !key_secret) {
+        throw new Error('Razorpay Key ID or Secret is missing.');
+    }
+
+    const razorpay = new Razorpay({
+        key_id,
+        key_secret,
+    });
+
     const options = {
-        amount: amount * 100,
-        currency,
+        amount: Math.round(amount * 100), // Ensure it's an integer and in paise
+        currency: currency || 'INR',
         receipt: `receipt_order_${new Date().getTime()}`,
         payment_capture: 1,
     };
 
     try {
+        console.log(`Initiating Razorpay order: ${options.amount} ${options.currency} for ${id}`);
         const order = await razorpay.orders.create(options);
         return order;
-    } catch (error) {
-        console.error('Razorpay order creation failed:', error);
-        throw new Error('Could not create Razorpay order.');
+    } catch (error: any) {
+        console.error('Razorpay order creation failed. Error details:', JSON.stringify(error, null, 2));
+        const errorMessage = error.error?.description || error.message || 'Could not create Razorpay order.';
+        throw new Error(errorMessage);
     }
 }
 

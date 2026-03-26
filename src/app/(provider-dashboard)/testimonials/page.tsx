@@ -140,7 +140,10 @@ export default function TestimonialsPage() {
         updatedItems = [...existingItems, finalItem];
       }
       
-      const testimonialsSettings = { ...provider.settings.testimonials, items: updatedItems };
+      const testimonialsSettings = { 
+        enabled: provider.settings.testimonials?.enabled ?? true, 
+        items: updatedItems 
+      };
       await updateProvider(provider.username, { settings: { ...provider.settings, testimonials: testimonialsSettings } });
       
       setProvider(p => p ? { ...p, settings: { ...p.settings, testimonials: testimonialsSettings } } : null);
@@ -160,7 +163,10 @@ export default function TestimonialsPage() {
     try {
         const itemToDelete = provider.settings.testimonials?.items.find(i => i.id === currentItem.id);
         const updatedItems = (provider.settings.testimonials?.items || []).filter(i => i.id !== currentItem.id);
-        const testimonialsSettings = { ...provider.settings.testimonials, items: updatedItems };
+        const testimonialsSettings = { 
+            enabled: provider.settings.testimonials?.enabled ?? true, 
+            items: updatedItems 
+        };
         
         await updateProvider(provider.username, { settings: { ...provider.settings, testimonials: testimonialsSettings } });
         

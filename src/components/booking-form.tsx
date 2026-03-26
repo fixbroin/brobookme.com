@@ -333,7 +333,6 @@ export function BookingForm({ provider }: { provider: Provider }) {
   const [processingMethod, setProcessingMethod] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [razorpaySettings, setRazorpaySettings] = useState<RazorpaySettings | null>(null);
   const currency = getCurrency(provider.settings.currency);
 
   const getInitialTimezone = useCallback(() => {
@@ -474,12 +473,6 @@ export function BookingForm({ provider }: { provider: Provider }) {
 
   useEffect(() => {
     
-    getAdminSettings().then(settings => {
-      if (settings?.razorpay) {
-        setRazorpaySettings(settings.razorpay);
-      }
-    });
-
     const serviceSlugParam = searchParams.get('serviceSlug');
     const quantityParam = searchParams.get('quantity');
     const savedStateJSON = localStorage.getItem(localStorageKey);
@@ -643,14 +636,15 @@ export function BookingForm({ provider }: { provider: Provider }) {
             setError(errorMessages.join(', '));
             setProcessingMethod(null);
         } else if (result?.order) {
-            if (!razorpaySettings?.keyId) {
-                setError('Payment gateway is not configured. Please contact the provider.');
+            const providerRazorpay = provider.settings.paymentGateways?.razorpay;
+            if (!providerRazorpay?.keyId) {
+                setError('Provider has not configured their payment gateway. Please contact them.');
                 setProcessingMethod(null);
                 return;
             }
             
             const options = {
-                key: razorpaySettings.keyId,
+                key: provider.settings.paymentGateways?.razorpay.keyId?.trim(),
                 amount: result.order.amount,
                 currency: result.order.currency,
                 name: `${provider.name} - Booking`,
@@ -877,7 +871,9 @@ export function BookingForm({ provider }: { provider: Provider }) {
     }
     
     const isPaidService = !!(price && price > 0);
-    const onlinePayment = provider.settings.onlinePaymentEnabled;
+    const razorpay = provider.settings.paymentGateways?.razorpay;
+    const hasProviderGateway = !!(razorpay?.enabled && razorpay?.keyId && razorpay?.keySecret);
+    const onlinePayment = provider.settings.onlinePaymentEnabled && hasProviderGateway;
     const payAfterService = provider.settings.payAfterServiceEnabled;
 
     const displayTimeInProviderTz = finalDateTime ? formatInTimeZone(finalDateTime, providerTimeZone, 'p') : '';

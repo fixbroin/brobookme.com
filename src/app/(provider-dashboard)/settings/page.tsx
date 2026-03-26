@@ -119,7 +119,11 @@ export default function SettingsPage() {
 
   const handleCustomPageChange = (page: 'about' | 'contact' | 'cancellationPolicy', field: string, value: any) => {
     if (!provider) return;
-    const currentCustomPages = provider.settings.customPages || {};
+    const currentCustomPages = provider.settings.customPages || {
+        about: { enabled: false, title: '', description: '' },
+        contact: { enabled: false, title: '', mobile: '', email: '', address: '', mapLink: '' },
+        cancellationPolicy: { enabled: false, title: '', description: '' },
+    };
     const updatedPageData = { ...currentCustomPages[page], [field]: value };
     const updatedCustomPages = { ...currentCustomPages, [page]: updatedPageData };
     handleSettingsChange('customPages', updatedCustomPages);
@@ -486,8 +490,8 @@ export default function SettingsPage() {
                     return (
                         <div key={day} className="grid grid-cols-3 items-center gap-4">
                             <div className="flex items-center space-x-2">
-                                <Switch id={day} checked={isEnabled} onCheckedChange={(checked) => handleWorkingHoursChange(day, 'enabled', !!checked)} />
-                                <Label htmlFor={day} className="capitalize">{day}</Label>
+                                <Switch id={String(day)} checked={isEnabled} onCheckedChange={(checked) => handleWorkingHoursChange(day, 'enabled', !!checked)} />
+                                <Label htmlFor={String(day)} className="capitalize">{day}</Label>
                             </div>
                             <div className="col-span-2 grid grid-cols-2 gap-2">
                                 <Input type="time" value={hours?.start || '09:00'} disabled={!isEnabled} onChange={(e) => handleWorkingHoursChange(day, 'start', e.target.value)} />

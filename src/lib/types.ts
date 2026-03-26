@@ -382,6 +382,7 @@ export type PaymentGatewaySettings = {
         enabled: boolean;
         keyId: string;
         keySecret: string;
+        webhookSecret?: string;
     },
     stripe: {
         enabled: boolean;

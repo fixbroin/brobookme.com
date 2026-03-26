@@ -312,6 +312,9 @@ export default function DashboardLayout({
             <NavMenuItem href="/subscription" tooltip="Subscription" icon={CreditCard}>
               Subscription
             </NavMenuItem>
+            <NavMenuItem href="/payment-setup" tooltip="Payment Setup" icon={CreditCard}>
+              Payment Setup
+            </NavMenuItem>
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>

@@ -90,6 +90,12 @@ const defaultProviderData: Omit<Provider, 'name' | 'username' | 'contact' | 'joi
         title: 'Our Work Gallery',
         items: [],
       },
+      paymentGateways: {
+        razorpay: { enabled: false, keyId: '', keySecret: '', webhookSecret: '' },
+        stripe: { enabled: false, publicKey: '', secretKey: '' },
+        paypal: { enabled: false, clientId: '', clientSecret: '' },
+        custom: { enabled: false, paymentLink: '' }
+      }
     },
 };
 
@@ -169,6 +175,17 @@ export async function getProviderByUsername(username: string): Promise<Provider 
     if (data.settings && data.settings.serviceTypes && typeof data.settings.serviceTypes[0] === 'string') {
         data.settings.serviceTypes = defaultServiceTypes;
     }
+    
+    // Initialize paymentGateways if missing
+    if (data.settings && !data.settings.paymentGateways) {
+        data.settings.paymentGateways = {
+            razorpay: { enabled: false, keyId: '', keySecret: '', webhookSecret: '' },
+            stripe: { enabled: false, publicKey: '', secretKey: '' },
+            paypal: { enabled: false, clientId: '', clientSecret: '' },
+            custom: { enabled: false, paymentLink: '' }
+        };
+    }
+
     return {
       ...data,
       joinedDate: data.joinedDate?.toDate(),
