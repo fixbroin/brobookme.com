@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: pageTitle,
       description: policySettings.description?.substring(0, 160),
       url: `/${username}/cancellation-policy`,
+      images: [provider.logoUrl || '/og-image.png'],
     }
   };
 }

@@ -49,6 +49,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: `/${username}/book`,
     },
+    openGraph: {
+      title: `Book an Appointment with ${provider.name}`,
+      description: `Schedule your appointment with ${provider.name}.`,
+      images: [provider.logoUrl || '/og-image.png'],
+    },
   };
 }
 

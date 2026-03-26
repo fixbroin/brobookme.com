@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: pageTitle,
       description: aboutSettings.description?.substring(0, 160),
       url: `/${username}/about`,
+      images: [provider.logoUrl || '/og-image.png'],
     }
   };
 }

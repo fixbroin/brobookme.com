@@ -29,6 +29,7 @@ export async function generateMetadata(
   }
 
   const previousImages = (await parent).openGraph?.images || [];
+  const ogImage = provider.logoUrl || '/og-image.png';
 
   return {
     title: `Book with ${provider.name}`,
@@ -39,7 +40,7 @@ export async function generateMetadata(
     openGraph: {
       title: `Book an Appointment with ${provider.name}`,
       description: provider.description,
-      images: [provider.logoUrl, ...previousImages],
+      images: [ogImage, ...previousImages],
     },
   };
 }

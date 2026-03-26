@@ -29,6 +29,7 @@ export async function generateMetadata(
   }
 
   const previousImages = (await parent).openGraph?.images || [];
+  const ogImage = service.imageUrl || provider.logoUrl || '/og-image.png';
 
   return {
     title: `${service.title} - ${provider.name}`,
@@ -36,7 +37,7 @@ export async function generateMetadata(
     openGraph: {
       title: `${service.title} | Book with ${provider.name}`,
       description: service.description,
-      images: [service.imageUrl, ...previousImages],
+      images: [ogImage, ...previousImages],
     },
     alternates: {
       canonical: `/${username}/services/${slug}`,

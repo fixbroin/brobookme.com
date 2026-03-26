@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: pageTitle,
       description: description,
       url: `/${username}/contact`,
+      images: [provider.logoUrl || '/og-image.png'],
     }
   };
 }
