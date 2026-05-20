@@ -22,7 +22,7 @@ export const BookingSchema = z.object({
   quantity: z.coerce.number().optional(),
 }).superRefine((data, ctx) => {
     // Doorstep service address validation
-    if (data.serviceType === 'Doorstep') {
+    if (data.serviceType.toLowerCase() === 'doorstep') {
         const requiredFieldMessage = 'You need to fill this field';
         if (!data.flatHouseNo) ctx.addIssue({ code: z.ZodIssueCode.custom, message: requiredFieldMessage, path: ['flatHouseNo'] });
         if (!data.pincode) ctx.addIssue({ code: z.ZodIssueCode.custom, message: requiredFieldMessage, path: ['pincode'] });

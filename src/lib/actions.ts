@@ -61,12 +61,12 @@ export async function createBooking(
   };
 
   if (serviceTypeSetting?.id === 'doorstep') {
-    booking.flatHouseNo = data.flatHouseNo;
-    booking.landmark = data.landmark;
-    booking.pincode = data.pincode;
-    booking.city = data.city;
-    booking.state = data.state;
-    booking.country = data.country;
+    booking.flatHouseNo = data.flatHouseNo || '';
+    booking.landmark = data.landmark || '';
+    booking.pincode = data.pincode || '';
+    booking.city = data.city || '';
+    booking.state = data.state || '';
+    booking.country = data.country || '';
   }
   
   const bookingId = await addBooking(booking, 'Pending');
@@ -115,6 +115,9 @@ export async function createBooking(
               const order = await createRazorpayOrder(price!, provider.settings.currency, bookingId, { 
                   keyId: razorpaySettings.keyId, 
                   keySecret: razorpaySettings.keySecret 
+              }, {
+                  bookingId,
+                  providerUsername: provider.username
               });
               await updateBooking(provider.username, bookingId, { payment: { orderId: order.id } });
               return { order, bookingId, confirmationParams: confirmationParams.toString() };
@@ -621,7 +624,7 @@ export async function createStripeCheckoutSession(
     return session;
 }
 
-export async function createRazorpayOrder(amount: number, currency: string, id: string, keys?: { keyId: string; keySecret: string; }) {
+export async function createRazorpayOrder(amount: number, currency: string, id: string, keys?: { keyId: string; keySecret: string; }, notes?: any) {
     let key_id: string;
     let key_secret: string;
 
@@ -646,12 +649,16 @@ export async function createRazorpayOrder(amount: number, currency: string, id: 
         key_secret,
     });
 
-    const options = {
+    const options: any = {
         amount: Math.round(amount * 100), // Ensure it's an integer and in paise
         currency: currency || 'INR',
         receipt: `receipt_order_${new Date().getTime()}`,
         payment_capture: 1,
     };
+
+    if (notes) {
+        options.notes = notes;
+    }
 
     try {
         console.log(`Initiating Razorpay order: ${options.amount} ${options.currency} for ${id}`);

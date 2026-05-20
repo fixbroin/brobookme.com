@@ -179,7 +179,10 @@ function SubscriptionComponent() {
         return;
       }
       
-      const order = await createRazorpayOrder(amountToPay, 'INR', plan.id);
+      const order = await createRazorpayOrder(amountToPay, 'INR', plan.id, undefined, {
+        planId: plan.id,
+        providerUsername: username
+      });
       if (!order) {
         toast({ title: 'Error', description: 'Could not create a payment order. Please try again.', variant: 'destructive'});
         setProcessingPlanId(null);
