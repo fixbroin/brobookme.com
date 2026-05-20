@@ -4,7 +4,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getProviderByUsername, updateProvider } from '@/lib/data';
+import { getProviderByUsername, updateProvider, getProviderByEmail } from '@/lib/data';
 import type { Provider, FloatingButtonsSettings } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -38,8 +38,7 @@ export default function ProviderFloatingButtonsPage() {
     useEffect(() => {
         onAuthStateChanged(auth, async (user) => {
             if (user?.email) {
-                const username = user.email.split('@')[0];
-                const providerData = await getProviderByUsername(username);
+                const providerData = await getProviderByEmail(user.email);
                 if (providerData) {
                     setProvider(providerData);
                     setSettings(providerData.settings.floatingButtons || defaultSettings);

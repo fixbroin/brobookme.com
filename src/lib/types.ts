@@ -147,6 +147,7 @@ export type ProviderProfile = {
   googleCalendar?: CalendarTokens | null;
   outlookCalendar?: CalendarTokens | null;
   expiryNotified?: boolean;
+  lastUsernameChange?: Date;
 };
 
 export type Provider = ProviderProfile & {

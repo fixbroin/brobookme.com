@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useTransition, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getPlans, getProviderByUsername, getPlan, getAdminSettings } from '@/lib/data';
+import { getPlans, getProviderByEmail, getPlan, getAdminSettings } from '@/lib/data';
 import { updateProviderSubscription, createRazorpayOrder, verifySubscriptionPaymentSignature } from '@/lib/actions';
 import type { Plan, Provider, RazorpaySettings, EnrichedProvider } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -38,10 +38,10 @@ function SubscriptionComponent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  const fetchInitialData = useCallback(async (username: string) => {
+  const fetchInitialData = useCallback(async (email: string) => {
     try {
       const [providerData, plansData, adminSettings] = await Promise.all([
-        getProviderByUsername(username),
+        getProviderByEmail(email),
         getPlans(),
         getAdminSettings(),
       ]);
@@ -80,8 +80,7 @@ function SubscriptionComponent() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser && currentUser.email) {
         setUser(currentUser);
-        const username = currentUser.email.split('@')[0];
-        fetchInitialData(username);
+        fetchInitialData(currentUser.email);
       } else {
         router.push('/login');
       }
@@ -141,7 +140,7 @@ function SubscriptionComponent() {
     if (!provider || !user || !user.email) return;
 
     setProcessingPlanId(plan.id);
-    const username = user.email.split('@')[0];
+    const username = provider.username;
     const amountToPay = (plan.offerPrice != null && plan.offerPrice < plan.price) ? plan.offerPrice : plan.price;
     
     startPaymentTransition(async () => {

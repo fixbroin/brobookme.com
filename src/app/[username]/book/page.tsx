@@ -43,6 +43,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!provider) {
     return { title: 'Provider Not Found' };
   }
+  const ogImage = provider.logoUrl || '/og-image.png';
+
   return {
     title: `Book an Appointment with ${provider.name}`,
     description: `Schedule your appointment with ${provider.name}.`,
@@ -52,7 +54,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `Book an Appointment with ${provider.name}`,
       description: `Schedule your appointment with ${provider.name}.`,
-      images: [provider.logoUrl || '/og-image.png'],
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Book an Appointment with ${provider.name}`,
+      description: `Schedule your appointment with ${provider.name}.`,
+      images: [ogImage],
     },
   };
 }

@@ -28,7 +28,6 @@ export async function generateMetadata(
     };
   }
 
-  const previousImages = (await parent).openGraph?.images || [];
   const ogImage = provider.logoUrl || '/og-image.png';
 
   return {
@@ -40,7 +39,13 @@ export async function generateMetadata(
     openGraph: {
       title: `Book an Appointment with ${provider.name}`,
       description: provider.description,
-      images: [ogImage, ...previousImages],
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Book an Appointment with ${provider.name}`,
+      description: provider.description,
+      images: [ogImage],
     },
   };
 }

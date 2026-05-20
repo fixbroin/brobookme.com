@@ -28,7 +28,6 @@ export async function generateMetadata(
     return { title: 'Not Found' };
   }
 
-  const previousImages = (await parent).openGraph?.images || [];
   const ogImage = service.imageUrl || provider.logoUrl || '/og-image.png';
 
   return {
@@ -37,7 +36,13 @@ export async function generateMetadata(
     openGraph: {
       title: `${service.title} | Book with ${provider.name}`,
       description: service.description,
-      images: [ogImage, ...previousImages],
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${service.title} | Book with ${provider.name}`,
+      description: service.description,
+      images: [ogImage],
     },
     alternates: {
       canonical: `/${username}/services/${slug}`,

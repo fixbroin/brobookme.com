@@ -21,6 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const pageTitle = contactSettings.title || `Contact ${provider.name}`;
   const description = `Get in touch with ${provider.name}. Find our contact details and location.`;
   
+  const ogImage = provider.logoUrl || '/og-image.png';
+
   return {
     title: pageTitle,
     description: description,
@@ -31,7 +33,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: pageTitle,
       description: description,
       url: `/${username}/contact`,
-      images: [provider.logoUrl || '/og-image.png'],
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: description,
+      images: [ogImage],
     }
   };
 }

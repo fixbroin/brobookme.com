@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { auth, storage } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { getProviderByUsername, updateProvider } from '@/lib/data';
+import { getProviderByEmail, updateProvider } from '@/lib/data';
 import type { Provider, ProviderTestimonial } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -54,7 +54,7 @@ export default function TestimonialsPage() {
     onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser?.email) {
         try {
-          const providerData = await getProviderByUsername(currentUser.email.split('@')[0]);
+          const providerData = await getProviderByEmail(currentUser.email);
           if (providerData) {
             setProvider(providerData);
           } else {

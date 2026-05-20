@@ -19,6 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const policySettings = provider.settings.customPages.cancellationPolicy;
   const pageTitle = policySettings.title || `Cancellation Policy`;
   
+  const ogImage = provider.logoUrl || '/og-image.png';
+
   return {
     title: pageTitle,
     description: policySettings.description?.substring(0, 160) || `Read our cancellation policy.`,
@@ -29,7 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: pageTitle,
       description: policySettings.description?.substring(0, 160),
       url: `/${username}/cancellation-policy`,
-      images: [provider.logoUrl || '/og-image.png'],
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: policySettings.description?.substring(0, 160),
+      images: [ogImage],
     }
   };
 }

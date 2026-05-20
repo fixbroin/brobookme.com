@@ -23,7 +23,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { getProviderByUsername, getAdminSettings, listenForNotifications } from '@/lib/data';
+import { getProviderByEmail, getAdminSettings, listenForNotifications } from '@/lib/data';
 import type { Provider, SiteSettings, Notification } from '@/lib/types';
 import {
   DropdownMenu,
@@ -78,10 +78,10 @@ export default function DashboardLayout({
         }
     };
 
-    const fetchProviderData = async (username: string, isRetry: boolean = false) => {
+    const fetchProviderData = async (email: string, isRetry: boolean = false) => {
         try {
             const [providerData, adminSettings] = await Promise.all([
-              getProviderByUsername(username),
+              getProviderByEmail(email),
               getAdminSettings(),
             ]);
 
@@ -106,7 +106,7 @@ export default function DashboardLayout({
             } else {
                 if (!isRetry) {
                     // Start retrying if provider not found on initial load
-                    console.warn(`Provider not found for username: ${username}. Starting retry mechanism...`);
+                    console.warn(`Provider not found for email: ${email}. Starting retry mechanism...`);
                     retryCountRef.current = 0;
                     retryIntervalRef.current = setInterval(() => {
                         retryCountRef.current += 1;
@@ -116,7 +116,7 @@ export default function DashboardLayout({
                             signOut(auth); // Log out the user
                             router.push('/login');
                         } else {
-                            fetchProviderData(username, true);
+                            fetchProviderData(email, true);
                         }
                     }, 2000);
                 }
@@ -133,8 +133,7 @@ export default function DashboardLayout({
         clearRetryInterval(); // Clear any existing interval on auth state change
         if (currentUser && currentUser.email) {
             setUser(currentUser);
-            const username = currentUser.email.split('@')[0] || '';
-            fetchProviderData(username);
+            fetchProviderData(currentUser.email);
         } else {
             router.push('/login');
             setLoading(false);
@@ -148,9 +147,8 @@ export default function DashboardLayout({
   }, [router, toast]);
 
   useEffect(() => {
-    if (user?.email) {
-      const username = user.email.split('@')[0];
-      const unsubscribe = listenForNotifications(username, (newNotifications) => {
+    if (provider?.username) {
+      const unsubscribe = listenForNotifications(provider.username, (newNotifications) => {
           setNotifications(newNotifications);
           
           let processedIds: Set<string>;

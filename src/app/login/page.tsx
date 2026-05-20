@@ -31,9 +31,8 @@ import {
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Chrome, Loader2 } from 'lucide-react';
-import { createProvider } from '@/lib/data';
+import { createProvider, getProviderByEmail } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 
@@ -108,11 +107,9 @@ export default function LoginPage() {
       }
 
       // Check if the user is new before creating a provider record
-      const username = user.email.split('@')[0];
-      const providerDocRef = doc(db, 'providers', username);
-      const docSnap = await getDoc(providerDocRef);
+      const providerData = await getProviderByEmail(user.email);
 
-      if (docSnap.exists()) {
+      if (providerData) {
         // Existing user, onAuthStateChanged will redirect
         router.replace('/dashboard');
       } else {

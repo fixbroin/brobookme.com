@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { getProviderByUsername, updateProvider } from "@/lib/data";
+import { getProviderByEmail, updateProvider } from "@/lib/data";
 import { notFound, useRouter } from "next/navigation";
 import {
   Card,
@@ -76,9 +76,8 @@ export default function SettingsPage() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser && currentUser.email) {
         setUser(currentUser);
-        const username = currentUser.email.split('@')[0];
         try {
-          const providerData = await getProviderByUsername(username);
+          const providerData = await getProviderByEmail(currentUser.email);
           if (providerData) {
             setProvider(providerData);
              if (providerData.settings?.slotDuration) {

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { getBookingsByProvider, getProviderByUsername, getPlan } from "@/lib/data";
+import { getBookingsByProvider, getProviderByUsername, getPlan, getProviderByEmail } from "@/lib/data";
 import {
   Card,
   CardContent,
@@ -44,14 +44,13 @@ export default function DashboardPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user && user.email) {
-        const username = user.email.split('@')[0];
         try {
-          const providerData = await getProviderByUsername(username);
+          const providerData = await getProviderByEmail(user.email);
           if (!providerData) {
             throw new Error("Provider not found");
           }
           const [bookingsData, planData] = await Promise.all([
-            getBookingsByProvider(username),
+            getBookingsByProvider(providerData.username),
             providerData.planId ? getPlan(providerData.planId) : Promise.resolve(null),
           ]);
           setProvider(providerData);

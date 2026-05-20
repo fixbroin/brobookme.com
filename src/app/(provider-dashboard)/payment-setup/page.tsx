@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { getProviderByUsername, updateProvider } from '@/lib/data';
+import { getProviderByEmail, updateProvider } from '@/lib/data';
 import { testRazorpayConnection, testStripeConnection } from '@/lib/actions';
 import type { Provider, PaymentGatewaySettings } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -29,9 +29,8 @@ export default function PaymentSetupPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser && currentUser.email) {
-        const username = currentUser.email.split('@')[0];
         try {
-          const providerData = await getProviderByUsername(username);
+          const providerData = await getProviderByEmail(currentUser.email);
           if (providerData) {
             setProvider(providerData);
           } else {

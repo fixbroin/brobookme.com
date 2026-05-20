@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getProviderByUsername, getBookingsForDay } from '@/lib/data';
+import { getProviderByEmail, getBookingsForDay } from '@/lib/data';
 import { updateBlockedSlots, updateBlockedDates } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { notFound, useRouter } from 'next/navigation';
@@ -80,9 +80,8 @@ export default function SlotManagementPage() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser && currentUser.email) {
         setUser(currentUser);
-        const username = currentUser.email.split('@')[0];
         try {
-          const providerData = await getProviderByUsername(username);
+          const providerData = await getProviderByEmail(currentUser.email);
           if (providerData) {
             setProvider(providerData);
             // Set the initial selected date to the next available day

@@ -189,11 +189,45 @@ export async function getProviderByUsername(username: string): Promise<Provider 
     return {
       ...data,
       joinedDate: data.joinedDate?.toDate(),
-      planExpiry: data.planExpiry?.toDate()
+      planExpiry: data.planExpiry?.toDate(),
+      lastUsernameChange: data.lastUsernameChange?.toDate()
     } as Provider;
   } else {
     return undefined;
   }
+}
+
+export async function getProviderByEmail(email: string): Promise<Provider | undefined> {
+  const providersCol = collection(db, 'providers');
+  const q = query(providersCol, where('contact.email', '==', email));
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    const docSnap = snapshot.docs[0];
+    const data = docSnap.data();
+    
+    // Same initialization logic as getProviderByUsername
+    if (data.settings && data.settings.serviceTypes && typeof data.settings.serviceTypes[0] === 'string') {
+        data.settings.serviceTypes = defaultServiceTypes;
+    }
+    
+    if (data.settings && !data.settings.paymentGateways) {
+        data.settings.paymentGateways = {
+            razorpay: { enabled: false, keyId: '', keySecret: '', webhookSecret: '' },
+            stripe: { enabled: false, publicKey: '', secretKey: '' },
+            paypal: { enabled: false, clientId: '', clientSecret: '' },
+            custom: { enabled: false, paymentLink: '' }
+        };
+    }
+
+    return {
+      ...data,
+      joinedDate: data.joinedDate?.toDate(),
+      planExpiry: data.planExpiry?.toDate(),
+      lastUsernameChange: data.lastUsernameChange?.toDate()
+    } as Provider;
+  }
+  return undefined;
 }
 
 export async function updateProvider(username: string, data: Partial<Provider>): Promise<void> {

@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from "react";
-import { getProviderByUsername, updateProvider, deleteProvider } from "@/lib/data";
+import { getProviderByEmail, updateProvider, deleteProvider } from "@/lib/data";
 import { notFound, useRouter } from "next/navigation";
 import {
   Card,
@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ClipboardCopy, Loader2, Upload, KeyRound, Trash2, X } from "lucide-react";
+import { ClipboardCopy, Loader2, Upload, KeyRound, Trash2, X, Link as LinkIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
@@ -35,15 +35,20 @@ import { onAuthStateChanged, User, sendPasswordResetEmail, deleteUser } from "fi
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { changeProviderUsername } from "@/lib/actions";
+import { differenceInDays, addDays, format } from "date-fns";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [changingUsername, setChangingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -55,12 +60,11 @@ export default function ProfilePage() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser && currentUser.email) {
         setUser(currentUser);
-        // This is a simplification. In a real app, you'd map UID to provider.
-        const username = currentUser.email.split('@')[0];
         try {
-          const providerData = await getProviderByUsername(username);
+          const providerData = await getProviderByEmail(currentUser.email);
           if (providerData) {
             setProvider(providerData);
+            setNewUsername(providerData.username);
             setPreviewUrl(providerData.logoUrl);
           } else {
             toast({ title: "Error", description: "Could not find your provider profile.", variant: "destructive" });
@@ -248,6 +252,31 @@ export default function ProfilePage() {
     }
   };
 
+  const handleChangeUsername = async () => {
+      if (!provider || !newUsername) return;
+      if (newUsername === provider.username) {
+          setIsUsernameDialogOpen(false);
+          return;
+      }
+
+      setChangingUsername(true);
+      try {
+          const result = await changeProviderUsername(provider.username, newUsername);
+          if (result.success) {
+              toast({ title: "Biolink Updated", description: `Your new public link is now /${newUsername}` });
+              setIsUsernameDialogOpen(false);
+              // Force refresh to reload with new username
+              window.location.reload();
+          } else {
+              toast({ title: "Update Failed", description: result.error, variant: "destructive" });
+          }
+      } catch (error: any) {
+          toast({ title: "Error", description: error.message || "An unexpected error occurred.", variant: "destructive" });
+      } finally {
+          setChangingUsername(false);
+      }
+  }
+
   const handlePasswordReset = async () => {
     if (!user || !user.email) {
       toast({
@@ -365,10 +394,40 @@ export default function ProfilePage() {
   
   const bookingLink = typeof window !== 'undefined' ? `${window.location.origin}/${provider.username}` : '';
 
+  const lastChangeDate = provider.lastUsernameChange;
+  const daysSinceLastChange = lastChangeDate ? differenceInDays(new Date(), lastChangeDate) : null;
+  const isRestricted = lastChangeDate && daysSinceLastChange !== null && daysSinceLastChange < 15;
+  const canChangeDate = lastChangeDate ? addDays(lastChangeDate, 15) : null;
+
   return (
     <>
       <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Biolink Slug</CardTitle>
+                      <CardDescription>Customize your public profile URL (e.g., brobook.me/yourname). Once changed, your old link will no longer work.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-1">
+                              <p className="font-medium">Current Slug: <span className="text-primary">/{provider.username}</span></p>
+                              {isRestricted ? (
+                                  <p className="text-xs text-destructive font-medium">
+                                      Next change available on: {format(canChangeDate!, 'PPP')} ({15 - daysSinceLastChange!} days left)
+                                  </p>
+                              ) : (
+                                  <p className="text-xs text-muted-foreground">Restriction: You can only change this once every 15 days.</p>
+                              )}
+                          </div>
+                          <Button variant="outline" onClick={() => setIsUsernameDialogOpen(true)} disabled={isRestricted}>
+                              <LinkIcon className="mr-2 h-4 w-4" />
+                              Change Biolink
+                          </Button>
+                      </div>
+                  </CardContent>
+              </Card>
+
               <Card>
                   <CardHeader>
                   <CardTitle>Public Profile</CardTitle>
@@ -503,6 +562,50 @@ export default function ProfilePage() {
             <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
               {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Yes, delete my account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isUsernameDialogOpen} onOpenChange={setIsUsernameDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Biolink Slug</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+                <div className="space-y-4 pt-2 text-foreground">
+                    <div className="space-y-2">
+                        <Label htmlFor="new-username">New Slug</Label>
+                        <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">brobook.me/</span>
+                            <Input 
+                                id="new-username" 
+                                value={newUsername} 
+                                onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, ''))}
+                                placeholder="new-slug" 
+                            />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Only letters, numbers, hyphens, and underscores are allowed.</p>
+                    </div>
+                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded text-destructive text-sm">
+                        <strong>Warning:</strong> Your old link <strong>/{provider.username}</strong> will stop working immediately. Customers will need your new link to book.
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                        Restriction: You can only change this once every 15 days.
+                    </div>
+                </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={changingUsername}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+                onClick={(e) => {
+                    e.preventDefault();
+                    handleChangeUsername();
+                }} 
+                disabled={changingUsername || !newUsername || newUsername === provider.username}
+            >
+              {changingUsername && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Change
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

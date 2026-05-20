@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { markAllNotificationsRead, clearAllNotifications, listenForNotifications } from '@/lib/data';
+import { markAllNotificationsRead, clearAllNotifications, listenForNotifications, getProviderByEmail } from '@/lib/data';
 import type { Notification } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -47,25 +47,35 @@ export default function NotificationsPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        const unsubscribeAuth = onAuthStateChanged(auth, user => {
-            if (user?.email) {
-                const uname = user.email.split('@')[0];
-                setUsername(uname);
-                setLoading(true);
-                const unsubscribeNotifications = listenForNotifications(uname, (data) => {
-                    setNotifications(data);
-                    setLoading(false);
-                });
+        let unsubscribeNotifications: (() => void) | null = null;
 
-                // Return the notification listener's unsubscribe function
-                return () => unsubscribeNotifications();
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+            if (user?.email) {
+                const providerData = await getProviderByEmail(user.email);
+                if (providerData) {
+                    const uname = providerData.username;
+                    setUsername(uname);
+                    setLoading(true);
+                    
+                    if (unsubscribeNotifications) unsubscribeNotifications();
+
+                    unsubscribeNotifications = listenForNotifications(uname, (data) => {
+                        setNotifications(data);
+                        setLoading(false);
+                    });
+                } else {
+                    router.push('/login');
+                }
             } else {
                 router.push('/login');
             }
         });
         
         // Return the auth listener's unsubscribe function
-        return () => unsubscribeAuth();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeNotifications) unsubscribeNotifications();
+        };
     }, [router, toast]);
 
     const handleMarkAllRead = () => {

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { getBookingsByProvider, getProviderByUsername, updateBookingStatus, deleteBooking, getBookingsForDay /*, getNotificationsForProvider, markAllNotificationsRead, clearAllNotifications */ } from "@/lib/data";
+import { getBookingsByProvider, getProviderByEmail, updateBookingStatus, deleteBooking, getBookingsForDay /*, getNotificationsForProvider, markAllNotificationsRead, clearAllNotifications */ } from "@/lib/data";
 import { cancelBooking, rescheduleBooking } from "@/lib/actions";
 import {
   Card,
@@ -70,16 +70,16 @@ export default function BookingsPage() {
   const currency = getCurrency(provider?.settings.currency);
 
 
-  const fetchData = async (username: string) => {
+  const fetchData = async (email: string) => {
       setLoading(true);
       try {
-        const providerData = await getProviderByUsername(username);
+        const providerData = await getProviderByEmail(email);
         if (!providerData) {
           toast({ title: 'Error', description: 'Could not find provider data.', variant: 'destructive' });
           router.push('/login');
           return;
         }
-        const bookingsData = await getBookingsByProvider(username);
+        const bookingsData = await getBookingsByProvider(providerData.username);
         
         setProvider(providerData);
 
@@ -102,8 +102,7 @@ export default function BookingsPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user && user.email) {
-        const username = user.email.split('@')[0];
-        fetchData(username);
+        fetchData(user.email);
       } else {
         router.push('/login');
       }

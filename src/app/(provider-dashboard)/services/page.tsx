@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { getProviderByUsername, updateProvider } from '@/lib/data';
+import { getProviderByEmail, updateProvider } from '@/lib/data';
 import type { Provider, Service } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -62,9 +62,8 @@ export default function ServicesPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser && currentUser.email) {
-        const username = currentUser.email.split('@')[0];
         try {
-          const providerData = await getProviderByUsername(username);
+          const providerData = await getProviderByEmail(currentUser.email);
           if (providerData) {
             setProvider(providerData);
           } else {

@@ -10,7 +10,7 @@ import { Loader2, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
-import { getProviderByUsername } from '@/lib/data';
+import { getProviderByEmail, getProviderByUsername } from '@/lib/data';
 import type { Provider } from '@/lib/types';
 import { getGoogleAuthUrl, getOutlookAuthUrl, disconnectCalendar } from '@/lib/calendar.actions';
 
@@ -80,18 +80,22 @@ export default function CalendarSetupPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser && currentUser.email) {
                 setUser(currentUser);
-                const username = currentUser.email.split('@')[0];
-                getProviderByUsername(username).then(providerData => {
+                try {
+                    const providerData = await getProviderByEmail(currentUser.email);
                     if (providerData) {
                         setProvider(providerData);
                     } else {
                         toast({ title: "Error", description: "Provider not found.", variant: 'destructive' });
                         router.push('/dashboard');
                     }
-                }).finally(() => setLoading(false));
+                } catch (error) {
+                    toast({ title: "Error", description: "Failed to fetch provider data.", variant: 'destructive' });
+                } finally {
+                    setLoading(false);
+                }
             } else {
                 router.push('/login');
             }
@@ -140,18 +144,18 @@ export default function CalendarSetupPage() {
     };
     
     const handleDisconnect = (type: 'google' | 'outlook') => {
-        if (!user || !user.email) return;
+        if (!provider) return;
 
         const action: ActionType = `disconnect-${type}`;
         setProcessingAction(action);
 
         startTransition(async () => {
-            const username = user.email!.split('@')[0];
-            const result = await disconnectCalendar(username, type);
+            const result = await disconnectCalendar(provider.username, type);
             if(result.success) {
                 toast({ title: 'Success', description: `Disconnected from ${type === 'google' ? 'Google' : 'Outlook'} Calendar.` });
                  // Re-fetch provider data
-                 getProviderByUsername(username).then((data) => setProvider(data || null));
+                 const data = await getProviderByUsername(provider.username);
+                 setProvider(data || null);
             } else {
                  toast({ title: 'Error', description: result.error, variant: 'destructive' });
             }

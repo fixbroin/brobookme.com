@@ -15,6 +15,9 @@ import Stripe from 'stripe';
 import crypto from 'crypto';
 import { sendSubscriptionEmail, sendBookingConfirmationEmail, sendProviderBookingNotificationEmail, sendBookingCancelledEmail, sendRescheduleEmail, sendProviderRescheduleEmail } from './email-templates';
 import { createGoogleCalendarEvent } from './calendar.actions';
+import { doc, getDoc, setDoc, deleteDoc, writeBatch, collection, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { db } from './firebase';
+import { differenceInDays } from 'date-fns';
 
 
 export async function createBooking(
@@ -784,6 +787,93 @@ export async function updateBlockedDates(username: string, dates: string[], shou
         revalidatePath(`/(provider-dashboard)/slot-management`);
         return { success: true };
     } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function changeProviderUsername(oldUsername: string, newUsername: string) {
+    try {
+        // 1. Validate new username
+        if (!/^[a-zA-Z0-9_-]{3,20}$/.test(newUsername)) {
+            throw new Error("Username must be 3-20 characters long and contain only letters, numbers, underscores, or hyphens.");
+        }
+
+        const provider = await getProviderByUsername(oldUsername);
+        if (!provider) throw new Error("Provider not found.");
+
+        // 2. Check 15-day restriction
+        if (provider.lastUsernameChange) {
+            const daysSinceLastChange = differenceInDays(new Date(), provider.lastUsernameChange);
+            if (daysSinceLastChange < 15) {
+                throw new Error(`You can only change your biolink once every 15 days. Please wait ${15 - daysSinceLastChange} more days.`);
+            }
+        }
+
+        // 3. Check if new username is taken
+        const existingProvider = await getProviderByUsername(newUsername);
+        if (existingProvider) {
+            throw new Error("This biolink slug is already taken. Please choose another one.");
+        }
+
+        // 4. Migration logic
+        const batch = writeBatch(db);
+
+        // a. Move main document
+        const oldRef = doc(db, 'providers', oldUsername);
+        const newRef = doc(db, 'providers', newUsername);
+        
+        const providerData = { 
+            ...provider, 
+            username: newUsername,
+            lastUsernameChange: serverTimestamp() 
+        };
+        // Remove plan as it's enriched and not in the main doc
+        delete (providerData as any).plan;
+        
+        batch.set(newRef, providerData);
+        batch.delete(oldRef);
+
+        // b. Move bookings subcollection
+        const oldBookingsCol = collection(db, 'providers', oldUsername, 'bookings');
+        const oldBookingsSnapshot = await getDocs(oldBookingsCol);
+        
+        oldBookingsSnapshot.forEach((bookingDoc) => {
+            const newBookingRef = doc(db, 'providers', newUsername, 'bookings', bookingDoc.id);
+            const bookingData = bookingDoc.data();
+            bookingData.providerUsername = newUsername; // Update reference
+            batch.set(newBookingRef, bookingData);
+            batch.delete(bookingDoc.ref);
+        });
+
+        // c. Move notifications subcollection (under 'users' collection)
+        const oldNotificationsCol = collection(db, 'users', oldUsername, 'notifications');
+        const oldNotificationsSnapshot = await getDocs(oldNotificationsCol);
+
+        oldNotificationsSnapshot.forEach((notifDoc) => {
+            const newNotifRef = doc(db, 'users', newUsername, 'notifications', notifDoc.id);
+            batch.set(newNotifRef, notifDoc.data());
+            batch.delete(notifDoc.ref);
+        });
+
+        await batch.commit();
+
+        // d. Update payments (might be too many for one batch if there are hundreds)
+        const paymentsCol = collection(db, 'payments');
+        const q = query(paymentsCol, where('providerUsername', '==', oldUsername));
+        const paymentsSnapshot = await getDocs(q);
+        
+        if (!paymentsSnapshot.empty) {
+            const paymentBatch = writeBatch(db);
+            paymentsSnapshot.forEach((payDoc) => {
+                paymentBatch.update(payDoc.ref, { providerUsername: newUsername });
+            });
+            await paymentBatch.commit();
+        }
+
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error changing username:", error);
         return { success: false, error: error.message };
     }
 }

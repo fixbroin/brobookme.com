@@ -19,6 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const aboutSettings = provider.settings.customPages.about;
   const pageTitle = aboutSettings.title || `About ${provider.name}`;
   
+  const ogImage = provider.logoUrl || '/og-image.png';
+
   return {
     title: pageTitle,
     description: aboutSettings.description?.substring(0, 160) || `Learn more about ${provider.name}.`,
@@ -29,7 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: pageTitle,
       description: aboutSettings.description?.substring(0, 160),
       url: `/${username}/about`,
-      images: [provider.logoUrl || '/og-image.png'],
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: aboutSettings.description?.substring(0, 160),
+      images: [ogImage],
     }
   };
 }
