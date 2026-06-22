@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Lock, Unlock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getWorkingPeriods } from '@/lib/utils';
 
 export default function SlotManagementPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -43,22 +44,26 @@ export default function SlotManagementPage() {
     if (!workingHours) return [];
 
     const slots = [];
-    let currentTime = parse(workingHours.start, 'HH:mm', startOfDay(date));
-    const endTime = parse(workingHours.end, 'HH:mm', startOfDay(date));
+    const periods = getWorkingPeriods(workingHours);
     const totalSlotTime = provider.settings.slotDuration + (provider.settings.breakTime || 0);
 
     const now = new Date();
     const bookingDelayLimit = add(now, { hours: provider.settings.bookingDelay || 0 });
 
-    while (currentTime < endTime) {
-      if (isEqual(startOfDay(date), startOfDay(now))) {
-        if (currentTime > bookingDelayLimit) {
+    for (const period of periods) {
+      let currentTime = parse(period.start, 'HH:mm', startOfDay(date));
+      const endTime = parse(period.end, 'HH:mm', startOfDay(date));
+
+      while (currentTime < endTime) {
+        if (isEqual(startOfDay(date), startOfDay(now))) {
+          if (currentTime > bookingDelayLimit) {
+            slots.push(format(currentTime, 'p'));
+          }
+        } else if (startOfDay(date) > startOfDay(now)) {
           slots.push(format(currentTime, 'p'));
         }
-      } else if (startOfDay(date) > startOfDay(now)) {
-        slots.push(format(currentTime, 'p'));
+        currentTime = add(currentTime, { minutes: totalSlotTime });
       }
-      currentTime = add(currentTime, { minutes: totalSlotTime });
     }
     return slots;
   }, []);
@@ -118,22 +123,26 @@ export default function SlotManagementPage() {
     if (!workingHours || isDayBlocked) return [];
 
     const slots = [];
-    let currentTime = parse(workingHours.start, 'HH:mm', startOfDay(selectedDate));
-    const endTime = parse(workingHours.end, 'HH:mm', startOfDay(selectedDate));
+    const periods = getWorkingPeriods(workingHours);
     const totalSlotTime = provider.settings.slotDuration + (provider.settings.breakTime || 0);
 
     const now = new Date();
     const bookingDelayLimit = add(now, { hours: provider.settings.bookingDelay || 0 });
 
-    while (currentTime < endTime) {
-      if (isEqual(startOfDay(selectedDate), startOfDay(now))) {
-        if (currentTime > bookingDelayLimit) {
-            slots.push(format(currentTime, 'p'));
+    for (const period of periods) {
+      let currentTime = parse(period.start, 'HH:mm', startOfDay(selectedDate));
+      const endTime = parse(period.end, 'HH:mm', startOfDay(selectedDate));
+
+      while (currentTime < endTime) {
+        if (isEqual(startOfDay(selectedDate), startOfDay(now))) {
+          if (currentTime > bookingDelayLimit) {
+              slots.push(format(currentTime, 'p'));
+          }
+        } else if (startOfDay(selectedDate) > startOfDay(now)) {
+          slots.push(format(currentTime, 'p'));
         }
-      } else if (startOfDay(selectedDate) > startOfDay(now)) {
-        slots.push(format(currentTime, 'p'));
+        currentTime = add(currentTime, { minutes: totalSlotTime });
       }
-      currentTime = add(currentTime, { minutes: totalSlotTime });
     }
     return slots;
   }, [selectedDate, provider]);

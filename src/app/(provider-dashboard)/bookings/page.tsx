@@ -54,6 +54,7 @@ import { Calendar as RescheduleCalendar } from '@/components/ui/calendar';
 import Link from 'next/link';
 import { Separator } from "@/components/ui/separator";
 import { getCurrency } from "@/lib/currencies";
+import { getWorkingPeriods } from "@/lib/utils";
 
 type EnrichedBooking = Booking & { status: BookingStatus };
 
@@ -500,24 +501,27 @@ export default function BookingsPage() {
         if (blockedDates.includes(format(date, 'yyyy-MM-dd'))) return [];
 
         const slots = [];
-        let currentTime = parse(workingHours.start, 'HH:mm', startOfDay(date));
-        const endTime = parse(workingHours.end, 'HH:mm', startOfDay(date));
+        const periods = getWorkingPeriods(workingHours);
         const totalSlotTime = provider.settings.slotDuration + (provider.settings.breakTime || 0);
 
         const now = new Date();
         const bookingDelayLimit = add(now, { hours: provider.settings.bookingDelay || 0 });
         const isSelectedDateToday = isToday(date);
         
-        while (currentTime < endTime) {
-            let isAvailable = true;
-            if (isSelectedDateToday && currentTime <= bookingDelayLimit) {
-                isAvailable = false;
-            }
+        for (const period of periods) {
+            let currentTime = parse(period.start, 'HH:mm', startOfDay(date));
+            const endTime = parse(period.end, 'HH:mm', startOfDay(date));
+            while (currentTime < endTime) {
+                let isAvailable = true;
+                if (isSelectedDateToday && currentTime <= bookingDelayLimit) {
+                    isAvailable = false;
+                }
 
-            if (isAvailable) {
-              slots.push(format(currentTime, 'p'));
+                if (isAvailable) {
+                  slots.push(format(currentTime, 'p'));
+                }
+                currentTime = add(currentTime, { minutes: totalSlotTime });
             }
-            currentTime = add(currentTime, { minutes: totalSlotTime });
         }
         return slots;
     }, []);

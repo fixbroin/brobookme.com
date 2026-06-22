@@ -4,8 +4,10 @@ import type { ChartConfig } from "@/components/ui/chart"
 export type ServiceType = 'Online' | 'Shop Visit' | 'Doorstep';
 export type BookingStatus = 'Upcoming' | 'Completed' | 'Canceled' | 'Not Completed' | 'Pending';
 
+export type WorkingPeriod = { start: string; end: string };
+
 export type WorkingHours = {
-  [day: string]: { start: string; end: string } | null;
+  [day: string]: WorkingPeriod | WorkingPeriod[] | null;
 };
 
 export type Service = {

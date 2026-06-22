@@ -454,7 +454,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                   </ScrollAnimation>
                   <div className="grid gap-8 md:grid-cols-2">
                     {settings.screenshots.screenshots.map((item, index) => (
-                      <ScrollAnimation key={item.id} delay={(index + 1) * 0.1}>
+                      <ScrollAnimation key={item.id || `screenshot-${index}`} delay={(index + 1) * 0.1}>
                         <a href={item.url || '#'} target="_blank" rel="noopener noreferrer" className={item.url ? 'cursor-pointer' : 'cursor-default'}>
                             <div className="overflow-hidden rounded-lg border shadow-lg">
                                 <Image
@@ -533,12 +533,12 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                                 </div>
                           </CardHeader>
                           <CardContent className="flex-1 space-y-2">
-                              {plan.features.map(feature => (
-                                  <div key={feature} className="flex items-center gap-2 text-sm">
-                                      <CheckIcon className="h-4 w-4 text-green-500" />
-                                      <span className="text-muted-foreground">{feature}</span>
-                                  </div>
-                              ))}
+                               {(plan.features || []).filter(feature => feature.trim() !== '').map((feature, idx) => (
+                                   <div key={`${feature}-${idx}`} className="flex items-center gap-2 text-sm">
+                                       <CheckIcon className="h-4 w-4 text-green-500" />
+                                       <span className="text-muted-foreground">{feature}</span>
+                                   </div>
+                               ))}
                           </CardContent>
                           <CardFooter className="mt-auto">
                               <Button className="w-full" asChild variant={plan.isFeatured ? 'default' : 'outline'}>
@@ -576,8 +576,8 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
             >
               <CarouselContent>
                 {(settings.testimonials && settings.testimonials.length > 0) ? (
-                  settings.testimonials.map((testimonial) => (
-                    <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
+                  settings.testimonials.map((testimonial, idx) => (
+                    <CarouselItem key={testimonial.id || `testimonial-${idx}`} className="md:basis-1/2 lg:basis-1/3">
                       <div className="p-4 h-full">
                         <Card className="h-full flex flex-col justify-between p-6">
                            <CardHeader className="p-0">
@@ -634,7 +634,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                  <Accordion type="single" collapsible className="w-full">
                     {settings.faq && settings.faq.length > 0 ? (
                         settings.faq.sort((a,b) => a.displayOrder - b.displayOrder).map((faq, i) => (
-                            <ScrollAnimation key={faq.id} delay={i * 0.05}>
+                            <ScrollAnimation key={faq.id || `faq-${i}`} delay={i * 0.05}>
                                 <AccordionItem value={faq.id}>
                                     <AccordionTrigger>{faq.question}</AccordionTrigger>
                                     <AccordionContent>{faq.answer}</AccordionContent>
@@ -696,8 +696,8 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                     <h4 className="font-semibold">Quick Links</h4>
                     <ul className="mt-4 space-y-2">
                         <li><Link href="/about" className="rounded-full px-3 py-1 text-sm font-medium text-foreground transition-colors hover:bg-primary/10 hover:text-primary">About Us</Link></li>
-                        {footerLinks.map(link => (
-                           <li key={link.id}><Link href={link.url} className="rounded-full px-3 py-1 text-sm font-medium text-foreground transition-colors hover:bg-primary/10 hover:text-primary">{link.name}</Link></li>
+                        {footerLinks.map((link, idx) => (
+                           <li key={link.id || `footer-${idx}`}><Link href={link.url} className="rounded-full px-3 py-1 text-sm font-medium text-foreground transition-colors hover:bg-primary/10 hover:text-primary">{link.name}</Link></li>
                         ))}
                     </ul>
                 </div>
@@ -728,8 +728,8 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                 <p className="text-sm text-foreground">{settings.footer?.copyright || `© ${new Date().getFullYear()} ${settings.branding.siteName}. All rights reserved.`}</p>
                  {settings.footer?.socialLinks && settings.footer.socialLinks.length > 0 && (
                      <div className="flex items-center gap-4">
-                        {settings.footer.socialLinks.map(link => (
-                            <Link key={link.id} href={link.url} aria-label={link.name} className="transition-opacity hover:opacity-80">
+                        {settings.footer.socialLinks.map((link, idx) => (
+                             <Link key={link.id || `social-${idx}`} href={link.url} aria-label={link.name} className="transition-opacity hover:opacity-80">
                                 <Suspense fallback={<div className="h-5 w-5 bg-muted rounded-full" />}>
                                     <DynamicLucideIcon name={link.icon} />
                                 </Suspense>

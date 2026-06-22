@@ -49,7 +49,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { getAddressFromPincode } from '@/lib/pincode.actions';
 import { CountryCodeSelector } from './country-code-selector';
-import { cn } from '@/lib/utils';
+import { cn, getWorkingPeriods } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -404,11 +404,7 @@ export function BookingForm({ provider }: { provider: Provider }) {
     const zonedDate = fromZonedTime(date, providerTimeZone);
     const dayString = format(zonedDate, 'yyyy-MM-dd');
 
-    const startTime = parse(`${dayString} ${workingHours.start}`, 'yyyy-MM-dd HH:mm', new Date());
-    const endTime = parse(`${dayString} ${workingHours.end}`, 'yyyy-MM-dd HH:mm', new Date());
-    
-    let currentTime = fromZonedTime(startTime, providerTimeZone);
-
+    const periods = getWorkingPeriods(workingHours);
     const now = new Date();
     const bookingDelayLimit = add(toZonedTime(now, providerTimeZone), { hours: provider.settings.bookingDelay || 0 });
     const totalSlotTime = provider.settings.slotDuration + (provider.settings.breakTime || 0);
@@ -416,22 +412,29 @@ export function BookingForm({ provider }: { provider: Provider }) {
 
     const isSelectedDateToday = isSameDay(toZonedTime(date, providerTimeZone), toZonedTime(now, providerTimeZone));
 
-    while (currentTime < fromZonedTime(endTime, providerTimeZone)) {
-        const slotUtc = currentTime; 
-        const slotISO = slotUtc.toISOString();
-        let isSlotAvailable = !blockedSlots.includes(slotISO);
+    for (const period of periods) {
+        const startTime = parse(`${dayString} ${period.start}`, 'yyyy-MM-dd HH:mm', new Date());
+        const endTime = parse(`${dayString} ${period.end}`, 'yyyy-MM-dd HH:mm', new Date());
+        
+        let currentTime = fromZonedTime(startTime, providerTimeZone);
 
-        if (isSelectedDateToday) {
-            if (slotUtc <= bookingDelayLimit) {
-                isSlotAvailable = false;
+        while (currentTime < fromZonedTime(endTime, providerTimeZone)) {
+            const slotUtc = currentTime; 
+            const slotISO = slotUtc.toISOString();
+            let isSlotAvailable = !blockedSlots.includes(slotISO);
+
+            if (isSelectedDateToday) {
+                if (slotUtc <= bookingDelayLimit) {
+                    isSlotAvailable = false;
+                }
             }
+            
+            if (isSlotAvailable) {
+                slots.push(slotUtc);
+            }
+            
+            currentTime = add(currentTime, { minutes: totalSlotTime });
         }
-        
-        if (isSlotAvailable) {
-            slots.push(slotUtc);
-        }
-        
-        currentTime = add(currentTime, { minutes: totalSlotTime });
     }
     return slots;
   }, []);

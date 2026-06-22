@@ -22,7 +22,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Provider, WorkingHours, ServiceTypeSetting, CustomPageAbout, CustomPageContact, CustomPageCancellation } from "@/lib/types";
-import { Loader2, Check, ChevronsUpDown } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import { timezones } from "@/lib/timezones";
 import { currencies, getCurrency, type Currency } from "@/lib/currencies";
 import {
@@ -46,7 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { cn, getWorkingPeriods } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
@@ -136,20 +136,68 @@ export default function SettingsPage() {
 
       if (part === 'enabled') {
           if (value) {
-              if (!updatedHours[day]) {
-                  updatedHours[day] = { start: '09:00', end: '17:00' };
+              if (!updatedHours[day] || (Array.isArray(updatedHours[day]) && updatedHours[day].length === 0)) {
+                  updatedHours[day] = [{ start: '09:00', end: '17:00' }];
               }
           } else {
               updatedHours[day] = null;
           }
-      } else {
-          const currentDayHours = updatedHours[day];
-          if (currentDayHours) {
-              updatedHours[day] = { ...currentDayHours, [part]: value };
-          }
       }
       handleSettingsChange('workingHours', updatedHours);
   }
+
+  const handleWorkingHoursPeriodChange = (day: keyof WorkingHours, index: number, part: 'start' | 'end', value: string) => {
+    if (!provider) return;
+    const updatedHours = { ...provider.settings.workingHours };
+    const currentDayHours = updatedHours[day];
+    
+    let periods = getWorkingPeriods(currentDayHours);
+    if (periods[index]) {
+      periods = periods.map((p, idx) => idx === index ? { ...p, [part]: value } : p);
+      updatedHours[day] = periods;
+      handleSettingsChange('workingHours', updatedHours);
+    }
+  };
+
+  const handlePeriodAdd = (day: keyof WorkingHours) => {
+    if (!provider) return;
+    const updatedHours = { ...provider.settings.workingHours };
+    const currentDayHours = updatedHours[day];
+    
+    let periods = getWorkingPeriods(currentDayHours);
+    
+    let start = '09:00';
+    let end = '17:00';
+    
+    if (periods.length > 0) {
+      const lastEnd = periods[periods.length - 1].end;
+      const [h, m] = lastEnd.split(':').map(Number);
+      if (!isNaN(h)) {
+        const nextStartH = Math.min(23, h + 1);
+        const nextEndH = Math.min(23, nextStartH + 2);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        start = `${pad(nextStartH)}:${pad(m || 0)}`;
+        end = `${pad(nextEndH)}:${pad(m || 0)}`;
+      }
+    }
+    
+    periods = [...periods, { start, end }];
+    updatedHours[day] = periods;
+    handleSettingsChange('workingHours', updatedHours);
+  };
+
+  const handlePeriodRemove = (day: keyof WorkingHours, index: number) => {
+    if (!provider) return;
+    const updatedHours = { ...provider.settings.workingHours };
+    const currentDayHours = updatedHours[day];
+    
+    let periods = getWorkingPeriods(currentDayHours);
+    if (periods.length > 1) {
+      periods = periods.filter((_, idx) => idx !== index);
+      updatedHours[day] = periods;
+      handleSettingsChange('workingHours', updatedHours);
+    }
+  };
 
   const handleSaveSettings = async () => {
     if (!provider) return;
@@ -486,15 +534,55 @@ export default function SettingsPage() {
                     {orderedDays.map((day) => {
                     const hours = settings.workingHours[day];
                     const isEnabled = !!hours;
+                    const periods = getWorkingPeriods(hours);
                     return (
-                        <div key={day} className="grid grid-cols-3 items-center gap-4">
-                            <div className="flex items-center space-x-2">
-                                <Switch id={String(day)} checked={isEnabled} onCheckedChange={(checked) => handleWorkingHoursChange(day, 'enabled', !!checked)} />
-                                <Label htmlFor={String(day)} className="capitalize">{day}</Label>
-                            </div>
-                            <div className="col-span-2 grid grid-cols-2 gap-2">
-                                <Input type="time" value={hours?.start || '09:00'} disabled={!isEnabled} onChange={(e) => handleWorkingHoursChange(day, 'start', e.target.value)} />
-                                <Input type="time" value={hours?.end || '17:00'} disabled={!isEnabled} onChange={(e) => handleWorkingHoursChange(day, 'end', e.target.value)} />
+                        <div key={day} className="flex flex-col space-y-2 border-b pb-4 last:border-b-0 last:pb-0">
+                            <div className="grid grid-cols-3 items-start gap-4">
+                                <div className="flex items-center space-x-2 pt-2">
+                                    <Switch id={String(day)} checked={isEnabled} onCheckedChange={(checked) => handleWorkingHoursChange(day, 'enabled', !!checked)} />
+                                    <Label htmlFor={String(day)} className="capitalize font-medium">{day}</Label>
+                                </div>
+                                <div className="col-span-2 space-y-3">
+                                    {isEnabled && periods.map((period, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <Input 
+                                                type="time" 
+                                                value={period.start} 
+                                                onChange={(e) => handleWorkingHoursPeriodChange(day, index, 'start', e.target.value)} 
+                                            />
+                                            <span className="text-muted-foreground text-sm">to</span>
+                                            <Input 
+                                                type="time" 
+                                                value={period.end} 
+                                                onChange={(e) => handleWorkingHoursPeriodChange(day, index, 'end', e.target.value)} 
+                                            />
+                                            <Button 
+                                                type="button" 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                onClick={() => handlePeriodRemove(day, index)} 
+                                                disabled={periods.length <= 1} 
+                                                className="h-9 w-9 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    {isEnabled && (
+                                        <Button 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm" 
+                                            onClick={() => handlePeriodAdd(day)} 
+                                            className="mt-1 flex items-center gap-1 w-fit"
+                                        >
+                                            <Plus className="h-3.5 w-3.5" /> Add Time Slot
+                                        </Button>
+                                    )}
+                                    {!isEnabled && (
+                                        <span className="text-muted-foreground text-sm italic pt-2 block">Day off</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );

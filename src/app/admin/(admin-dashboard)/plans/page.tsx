@@ -118,7 +118,7 @@ export default function AdminPlansPage() {
       name: currentPlan.name,
       price: Number(currentPlan.price || 0),
       duration: currentPlan.duration,
-      features: currentPlan.features,
+      features: (currentPlan.features || []).map(f => f.trim()).filter(f => f !== ''),
       status: currentPlan.status,
       isFeatured: currentPlan.isFeatured || false,
       displayOrder: Number(currentPlan.displayOrder || 0),
