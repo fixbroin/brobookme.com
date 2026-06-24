@@ -16,7 +16,7 @@ import {
   SidebarTitle,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LayoutDashboard, Settings, User as UserIcon, Loader2, CalendarCheck, LogOut, CreditCard, CalendarX, Home, CalendarDays, Bell, ConciergeBell, Blocks, Star, GalleryHorizontal, Phone } from "lucide-react";
+import { LayoutDashboard, Settings, User as UserIcon, Loader2, CalendarCheck, LogOut, CreditCard, CalendarX, Home, CalendarDays, Bell, ConciergeBell, Blocks, Star, GalleryHorizontal, Phone, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -290,6 +290,9 @@ export default function DashboardLayout({
             </NavMenuItem>
             <NavMenuItem href="/gallery" tooltip="Gallery" icon={GalleryHorizontal}>
               Gallery
+            </NavMenuItem>
+            <NavMenuItem href="/blog" tooltip="Blog" icon={BookOpen}>
+              Blog
             </NavMenuItem>
             <NavMenuItem href="/floating-buttons" tooltip="Floating Buttons" icon={Phone}>
               Floating Buttons

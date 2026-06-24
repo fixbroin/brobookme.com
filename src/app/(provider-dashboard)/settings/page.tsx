@@ -795,6 +795,17 @@ export default function SettingsPage() {
                             </div>
                         )}
                     </div>
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <Label htmlFor="enable-blogs" className="flex flex-col gap-1">
+                            <span>Enable Blogs Section</span>
+                            <span className="font-normal text-muted-foreground">Show blog posts on your public booking page.</span>
+                        </Label>
+                        <Switch
+                            id="enable-blogs"
+                            checked={settings.enableBlogsPage ?? true}
+                            onCheckedChange={(checked) => handleSettingsChange('enableBlogsPage', checked)}
+                        />
+                    </div>
                 </CardContent>
             </Card>
         </TabsContent>

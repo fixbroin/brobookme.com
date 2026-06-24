@@ -111,6 +111,7 @@ export type ProviderSettings = {
     cancellationPolicy: CustomPageCancellation;
   };
   enableServicesPage?: boolean;
+  enableBlogsPage?: boolean;
   services?: Service[];
   paymentGateways?: PaymentGatewaySettings;
   testimonials?: {
@@ -123,6 +124,29 @@ export type ProviderSettings = {
     items: ProviderGalleryItem[];
   };
   floatingButtons?: FloatingButtonsSettings;
+  blogs?: BlogPost[];
+};
+
+export type BlogFaqItem = {
+  question: string;
+  answer: string;
+};
+
+export type BlogPost = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  faq?: BlogFaqItem[];
+  tags?: string[];
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
+  };
+  enabled: boolean;
+  createdAt: string;
 };
 
 export type CalendarTokens = {

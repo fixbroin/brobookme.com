@@ -2,7 +2,7 @@
 
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, query, where, deleteDoc, serverTimestamp, orderBy, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Provider, Booking, BookingStatus, AdminSettings, Plan, EnrichedProvider, Payment, AdminDashboardData, ActivityLog, ReportsData, Testimonial, ServiceTypeSetting, Notification, HeroSettings, ScreenshotsSettings, Service } from './types';
+import type { Provider, Booking, BookingStatus, AdminSettings, Plan, EnrichedProvider, Payment, AdminDashboardData, ActivityLog, ReportsData, Testimonial, ServiceTypeSetting, Notification, HeroSettings, ScreenshotsSettings, Service, BlogPost } from './types';
 import { startOfDay, endOfDay, subDays, addDays, getHours, isSameDay as isSameDayFns } from 'date-fns';
 import { sendWelcomeEmail, sendAdminNewProviderNotificationEmail } from './email-templates';
 import { format } from 'date-fns';
@@ -46,6 +46,34 @@ const defaultServices: Service[] = [
     }
 ];
 
+const defaultBlogs: BlogPost[] = [
+    {
+      id: uuidv4(),
+      slug: 'welcome-to-our-blog',
+      title: 'Welcome to Our Blog',
+      description: 'We are excited to launch our new blog page! Here, we will share regular updates, industry news, helpful guides, tips, and insights to help you get the most out of our services. Stay tuned for our upcoming posts, and feel free to reach out if you have any questions or would like to see us cover a specific topic.',
+      imageUrl: 'https://picsum.photos/seed/welcomeblog/800/450',
+      faq: [
+        {
+          question: 'What kind of topics will you cover?',
+          answer: 'We plan to cover a wide range of topics, including expert maintenance guides, business insights, service updates, and practical tips to solve common challenges.'
+        },
+        {
+          question: 'How can I get in touch with questions?',
+          answer: 'You can easily get in touch with us using the Contact details on our profile page, or by booking a direct consultation slot.'
+        }
+      ],
+      tags: ['welcome', 'news', 'tips'],
+      seo: {
+        metaTitle: 'Welcome to Our Service Blog - Guides and Updates',
+        metaDescription: 'Read our opening blog post introducing our new articles, guides, tips, and service updates to help your business thrive.',
+        metaKeywords: 'blog, news, service tips, guides, updates'
+      },
+      enabled: true,
+      createdAt: new Date().toISOString(),
+    }
+];
+
 
 const defaultProviderData: Omit<Provider, 'name' | 'username' | 'contact' | 'joinedDate' | 'planId' | 'planExpiry' | 'hasUsedTrial' | 'isSuspended' | 'googleCalendar' | 'expiryNotified'> = {
     logoUrl: '/android-chrome-512x512.png',
@@ -68,6 +96,7 @@ const defaultProviderData: Omit<Provider, 'name' | 'username' | 'contact' | 'joi
       serviceTypes: defaultServiceTypes,
       services: defaultServices,
       enableServicesPage: false,
+      enableBlogsPage: true,
       shopAddress: '123 Acme St, Business Bay, Tech City, 12345',
       timezone: 'Asia/Kolkata',
       dateFormat: 'dd/MM/yyyy',
@@ -90,6 +119,7 @@ const defaultProviderData: Omit<Provider, 'name' | 'username' | 'contact' | 'joi
         title: 'Our Work Gallery',
         items: [],
       },
+      blogs: defaultBlogs,
       paymentGateways: {
         razorpay: { enabled: false, keyId: '', keySecret: '', webhookSecret: '' },
         stripe: { enabled: false, publicKey: '', secretKey: '' },
@@ -289,6 +319,15 @@ export async function getServiceBySlug(username: string, slug?: string | null): 
         return null;
     }
     return provider.settings.services.find(s => s.slug === slug || s.id === slug) || null;
+}
+
+export async function getBlogBySlug(username: string, slug?: string | null): Promise<BlogPost | null> {
+    if (!slug) return null;
+    const provider = await getProviderByUsername(username);
+    if (!provider || !provider.settings.blogs) {
+        return null;
+    }
+    return provider.settings.blogs.find(b => b.slug === slug || b.id === slug) || null;
 }
 
 export async function getBookingsForDay(username: string, date: Date): Promise<Booking[]> {
