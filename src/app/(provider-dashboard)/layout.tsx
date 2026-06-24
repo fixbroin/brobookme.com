@@ -175,7 +175,7 @@ export default function DashboardLayout({
       });
       return () => unsubscribe();
     }
-  }, [user]);
+  }, [provider?.username]);
 
   useEffect(() => {
     // This effect handles redirection based on plan status once the provider is loaded
@@ -334,7 +334,7 @@ export default function DashboardLayout({
                   <Link href="/notifications">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                        <Badge className="absolute -top-1 -right-1 h-5 w-5 justify-center rounded-full p-0 bg-red-500 text-white">{unreadCount}</Badge>
+                        <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0 px-0 py-0 bg-red-500 text-white text-[10px] font-bold border-none">{unreadCount}</Badge>
                     )}
                   </Link>
                 </Button>
