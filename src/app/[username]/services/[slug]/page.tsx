@@ -3,12 +3,11 @@ import { getProviderByUsername, getServiceBySlug } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { PublicPageLayout } from "../../_components/public-page-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import Link from "next/link";
 import type { Metadata, ResolvingMetadata } from 'next';
 import { getCurrency } from "@/lib/currencies";
-import { Clock, Tag, ChevronRight, ShieldCheck, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
+import { CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
+import { ServiceBookingCard } from "./service-booking-card";
 
 type Props = {
   params: Promise<{ username: string; slug: string }>;
@@ -168,51 +167,11 @@ export default async function ServiceDetailsPage({ params }: Props) {
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-          <Card className="sticky top-8 shadow-xl border-primary/10">
-            <CardHeader>
-              <CardTitle>Booking Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <Tag className="h-5 w-5" />
-                    <span>Price</span>
-                  </div>
-                  <div className="text-xl font-bold">
-                    {service.offerPrice != null && service.offerPrice < service.price ? (
-                      <div className="flex flex-col items-end">
-                        <span className="line-through text-muted-foreground text-sm">{currency?.symbol}{service.price}</span>
-                        <span className="text-primary">{currency?.symbol}{service.offerPrice}</span>
-                      </div>
-                    ) : (
-                      service.price > 0 ? <span>{currency?.symbol}{service.price}</span> : <span className="text-green-600 font-bold">Free</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <Clock className="h-5 w-5" />
-                    <span>Duration</span>
-                  </div>
-                  <span className="font-semibold">{service.duration} minutes</span>
-                </div>
-              </div>
-
-              <Button asChild size="lg" className="w-full text-lg h-14 shadow-lg hover:shadow-primary/20 transition-all group">
-                <Link href={`/${username}/book?serviceSlug=${service.slug || service.id}`}>
-                  Book This Service
-                  <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
-                <ShieldCheck className="h-4 w-4" />
-                <span>Secure Booking via BroBookMe</span>
-              </div>
-            </CardContent>
-          </Card>
+          <ServiceBookingCard
+            service={service}
+            username={username}
+            currencySymbol={currency?.symbol ?? ''}
+          />
         </div>
       </div>
     </PublicPageLayout>

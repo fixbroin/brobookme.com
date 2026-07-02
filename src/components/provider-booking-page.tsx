@@ -448,8 +448,8 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                         {services.map(s => {
                              const slug = s.slug || s.id;
                              const quantity = serviceQuantities[slug] || 1;
-                             const totalPrice = (s.offerPrice ?? s.price) * quantity;
-                             const buttonText = s.quantityEnabled && quantity > 1 ? `Book Now (${currency?.symbol}${totalPrice})` : 'Book Now';
+                             const unitPrice = s.offerPrice ?? s.price;
+                             const totalPrice = unitPrice * quantity;
 
                              return (
                                 <Card key={s.id} className="flex flex-col h-full group overflow-hidden rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
@@ -471,9 +471,14 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                         <p className="text-sm text-muted-foreground mt-1 flex-1 line-clamp-2">{s.description}</p>
                                         <div className="text-lg font-extrabold mt-2">
                                             {s.offerPrice != null && s.offerPrice < s.price ? (
-                                                <span><span className="line-through text-muted-foreground text-sm">{currency?.symbol}{s.price}</span> {currency?.symbol}{s.offerPrice}</span>
+                                                <span>
+                                                    <span className="line-through text-muted-foreground text-sm">{currency?.symbol}{s.quantityEnabled && quantity > 1 ? s.price * quantity : s.price}</span>
+                                                    {' '}{currency?.symbol}{totalPrice}
+                                                </span>
                                             ) : (
-                                                s.price > 0 ? <span>{currency?.symbol}{s.price}</span> : <span className="text-green-600">Free</span>
+                                                s.price > 0
+                                                    ? <span>{currency?.symbol}{totalPrice}</span>
+                                                    : <span className="text-green-600">Free</span>
                                             )}
                                         </div>
                                         <div className="mt-4 flex flex-col gap-2">
@@ -492,7 +497,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                                 </Button>
                                                 <Button asChild className="w-full rounded-full">
                                                     <Link href={`/${provider.username}/book?serviceSlug=${s.slug || s.id}${s.quantityEnabled ? '&quantity=' + quantity : ''}`}>
-                                                        {buttonText}
+                                                        Book Now
                                                     </Link>
                                                 </Button>
                                             </div>
