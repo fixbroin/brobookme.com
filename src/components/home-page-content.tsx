@@ -286,28 +286,77 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
 
       <main className="flex-1">
         {/* 1. Hero Section */}
-        <section className="relative py-12 md:py-16">
+        <section className="relative py-20 md:py-28 overflow-hidden">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes float-slow {
+              0%, 100% { transform: translateY(0) rotate(0deg); }
+              50% { transform: translateY(-8px) rotate(2deg); }
+            }
+            @keyframes float-reverse {
+              0%, 100% { transform: translateY(0) rotate(0deg); }
+              50% { transform: translateY(8px) rotate(-2deg); }
+            }
+            .animate-float-slow {
+              animation: float-slow 7s ease-in-out infinite;
+            }
+            .animate-float-reverse {
+              animation: float-reverse 9s ease-in-out infinite;
+            }
+          `}} />
+          {/* Pastel Gradient Background */}
           <div
-            className="absolute inset-0 -z-10 bg-gradient-to-b from-background to-muted/50"
+            className="absolute inset-0 -z-10 bg-gradient-to-tr from-[#fbcfe8]/30 via-[#fef3c7]/20 to-[#ccfbf1]/30 dark:from-[#311042]/10 dark:via-[#1e1135]/10 dark:to-[#0f172a]/10"
             aria-hidden="true"
           />
-          <div className="container mx-auto px-4 md:px-6">
-            <div className='grid md:grid-cols-2 gap-8 items-center'>
+          {/* Ambient Blur Blobs */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-pink-300/10 rounded-full blur-3xl -z-10 animate-pulse pointer-events-none" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-teal-200/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+
+          {/* Background Grid Wavy Lines */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.15] dark:opacity-[0.08] pointer-events-none -z-10" viewBox="0 0 1440 320" preserveAspectRatio="none">
+            <path fill="none" stroke="currentColor" strokeWidth="2" d="M0,160 C320,300 480,100 800,240 C1120,380 1280,120 1440,160" />
+            <path fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="5,5" d="M0,100 C320,200 640,50 960,180 C1280,310 1380,150 1440,120" />
+          </svg>
+
+          {/* Floating Botanical Flower - Left */}
+          <div className="absolute left-4 top-1/4 w-32 h-32 text-pink-600/20 dark:text-pink-400/10 animate-float-slow pointer-events-none hidden lg:block -z-10">
+            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M10,80 C30,70 50,40 45,20" />
+              <path d="M45,20 C55,10 65,15 60,25 C55,35 45,30 45,20 Z" fill="currentColor" fillOpacity="0.05" />
+              <path d="M25,60 C35,55 42,58 38,68 C34,78 25,72 25,60 Z" fill="currentColor" fillOpacity="0.05" />
+              <path d="M38,42 C48,37 55,40 51,50 C47,60 38,54 38,42 Z" fill="currentColor" fillOpacity="0.05" />
+            </svg>
+          </div>
+
+          {/* Floating Botanical Flower - Right */}
+          <div className="absolute right-6 top-1/3 w-36 h-36 text-teal-600/20 dark:text-teal-400/10 animate-float-reverse pointer-events-none hidden lg:block -z-10">
+            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M90,90 C70,70 60,40 70,10" />
+              <circle cx="70" cy="10" r="10" stroke="currentColor" />
+              <path d="M70,0 C74,-12 66,-12 70,0 Z" fill="currentColor" fillOpacity="0.1" />
+              <path d="M70,20 C74,32 66,32 70,20 Z" fill="currentColor" fillOpacity="0.1" />
+              <path d="M80,10 C92,14 92,6 80,10 Z" fill="currentColor" fillOpacity="0.1" />
+              <path d="M60,10 C48,14 48,6 60,10 Z" fill="currentColor" fillOpacity="0.1" />
+            </svg>
+          </div>
+
+          <div className="container mx-auto px-4 md:px-6 relative z-10">
+            <div className='grid md:grid-cols-2 gap-12 items-center'>
               <div className="text-center md:text-left">
                 <ScrollAnimation>
-                    <h2 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+                    <h2 className="text-4xl font-extrabold tracking-tight text-foreground md:text-6xl bg-gradient-to-r from-primary via-purple-600 to-accent bg-clip-text text-transparent leading-tight md:leading-none">
                     {settings.hero.title}
                     </h2>
                 </ScrollAnimation>
                 <ScrollAnimation delay={0.1}>
-                    <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground md:mx-0">
+                    <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:mx-0 leading-relaxed">
                     {settings.hero.paragraph}
                     </p>
                 </ScrollAnimation>
                 <ScrollAnimation delay={0.2}>
                     <div className="mt-8 flex flex-col sm:flex-row justify-center md:justify-start gap-4">
                     {settings.hero.buttons.map((button, index) => (
-                        <Button key={index} size="lg" asChild variant={button.variant}>
+                        <Button key={index} size="lg" asChild variant={button.variant} className="rounded-full px-8 shadow-lg transition-transform hover:-translate-y-0.5">
                             <Link href={button.link}>{button.text}</Link>
                         </Button>
                     ))}
@@ -316,24 +365,32 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
               </div>
                <div>
                 <ScrollAnimation delay={0.3}>
-                   <a href={settings.hero.clickUrl || '#'} target="_blank" rel="noopener noreferrer" className={settings.hero.clickUrl ? 'cursor-pointer' : 'cursor-default'}>
-                        <Image
-                            src={settings.hero.imageUrl}
-                            alt="BroBookMe Dashboard Mockup"
-                            width={1200}
-                            height={800}
-                            className="rounded-lg shadow-2xl"
-                            data-ai-hint="app dashboard"
-                            priority
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                            onContextMenu={(e) => e.preventDefault()}
-                            draggable={false}
-                        />
-
+                   <a href={settings.hero.clickUrl || '#'} target="_blank" rel="noopener noreferrer" className={settings.hero.clickUrl ? 'cursor-pointer block' : 'cursor-default block'}>
+                        <div className="rounded-[2.5rem] p-3 md:p-4 bg-background/50 dark:bg-background/20 backdrop-blur-md border border-primary/10 shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-transform hover:scale-[1.01] duration-300">
+                            <Image
+                                src={settings.hero.imageUrl}
+                                alt="BroBookMe Dashboard Mockup"
+                                width={1200}
+                                height={800}
+                                className="rounded-[2rem] shadow-md object-cover"
+                                data-ai-hint="app dashboard"
+                                priority
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                                onContextMenu={(e) => e.preventDefault()}
+                                draggable={false}
+                            />
+                        </div>
                     </a>
                 </ScrollAnimation>
                </div>
             </div>
+          </div>
+          
+          {/* Curved wave bottom divider of the Hero section */}
+          <div className="absolute bottom-0 left-0 w-full overflow-hidden text-background pointer-events-none translate-y-1">
+              <svg className="w-full h-12 text-background fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                  <path d="M0,64 C288,128 576,0 864,64 C1152,128 1296,64 1440,32 L1440,120 L0,120 Z" />
+              </svg>
           </div>
         </section>
 
@@ -392,13 +449,13 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                 { icon: Wallet, title: 'Seamless Subscription Billing', desc: 'Integrate with your favorite payment provider for easy subscription and billing management.' },
               ].map((feature, i) => (
                 <ScrollAnimation key={feature.title} delay={i * 0.1}>
-                    <Card className="text-center flex flex-col items-center h-full">
-                        <CardHeader>
-                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mx-auto">
+                    <Card className="text-center flex flex-col items-center h-full rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
+                        <CardHeader className="flex flex-col items-center justify-center">
+                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-primary/10 text-primary mx-auto">
                             <feature.icon className="h-6 w-6" />
                         </div>
-                        <CardTitle>{feature.title}</CardTitle>
-                        <CardDescription>{feature.desc}</CardDescription>
+                        <CardTitle className="text-xl font-bold">{feature.title}</CardTitle>
+                        <CardDescription className="mt-2 text-sm text-muted-foreground">{feature.desc}</CardDescription>
                         </CardHeader>
                     </Card>
                 </ScrollAnimation>
@@ -504,7 +561,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
               ) : (
                   plans.map((plan, i) => (
                     <ScrollAnimation key={plan.id} delay={i * 0.1}>
-                      <Card className={`relative flex flex-col h-full ${plan.isFeatured ? 'border-2 border-primary shadow-2xl' : ''}`}>
+                      <Card className={`relative flex flex-col h-full rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out ${plan.isFeatured ? 'border-2 border-primary shadow-2xl' : ''}`}>
                           {plan.isFeatured && (
                             <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Best Value</Badge>
                           )}
@@ -541,7 +598,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                                ))}
                           </CardContent>
                           <CardFooter className="mt-auto">
-                              <Button className="w-full" asChild variant={plan.isFeatured ? 'default' : 'outline'}>
+                              <Button className="w-full rounded-full" asChild variant={plan.isFeatured ? 'default' : 'outline'}>
                                   <Link href="/login">
                                       {plan.duration === 'trial' ? 'Start Free Trial' : 'Subscribe'}
                                   </Link>
@@ -579,7 +636,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                   settings.testimonials.map((testimonial, idx) => (
                     <CarouselItem key={testimonial.id || `testimonial-${idx}`} className="md:basis-1/2 lg:basis-1/3">
                       <div className="p-4 h-full">
-                        <Card className="h-full flex flex-col justify-between p-6">
+                        <Card className="h-full flex flex-col justify-between p-6 rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
                            <CardHeader className="p-0">
                                 <div className="flex items-center gap-0.5">
                                     {[...Array(5)].map((_, i) => (
@@ -591,7 +648,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                             <blockquote className="text-lg italic text-foreground">"{testimonial.description}"</blockquote>
                           </CardContent>
                            <CardFooter className="p-0 flex-row gap-4 items-center">
-                                <Avatar className="w-12 h-12">
+                                <Avatar className="w-12 h-12 rounded-[1rem] overflow-hidden">
                                     <AvatarImage src={testimonial.imageUrl} alt={testimonial.name} loading="lazy" onContextMenu={(e) => e.preventDefault()} draggable={false} />
                                     <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
@@ -665,15 +722,19 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         <section className="bg-primary text-primary-foreground py-20">
           <div className="container mx-auto px-4 text-center md:px-6">
             <ScrollAnimation>
-                <h3 className="text-4xl font-bold">Ready to Simplify Your Business?</h3>
+                <h3 className="text-4xl font-bold">
+                  {settings.hero.ctaTitle || 'Ready to Simplify Your Business?'}
+                </h3>
                 <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80">
-                Join hundreds of professionals who are saving time, reducing no-shows, and growing their business with BroBookMe.
+                  {settings.hero.ctaParagraph || 'Join hundreds of professionals who are saving time, reducing no-shows, and growing their business with BroBookMe.'}
                 </p>
             </ScrollAnimation>
             <ScrollAnimation delay={0.1}>
                 <div className="mt-8">
-                <Button size="lg" variant="secondary" asChild>
-                    <Link href="/login">Start Your 3-Day Free Trial <ChevronRight className="ml-2 h-5 w-5" /></Link>
+                <Button size="lg" variant="secondary" asChild className="rounded-full">
+                    <Link href="/login">
+                      {settings.hero.ctaButtonText || 'Start Your 3-Day Free Trial'} <ChevronRight className="ml-2 h-5 w-5" />
+                    </Link>
                 </Button>
                 </div>
             </ScrollAnimation>

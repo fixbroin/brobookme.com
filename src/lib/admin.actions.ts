@@ -45,6 +45,9 @@ const heroSettingsSchema = z.object({
     button1Link: z.string().min(1, "Button 1 Link is required."),
     button2Text: z.string().min(1, "Button 2 Text is required."),
     button2Link: z.string().min(1, "Button 2 Link is required."),
+    ctaTitle: z.string().optional().or(z.literal('')),
+    ctaParagraph: z.string().optional().or(z.literal('')),
+    ctaButtonText: z.string().optional().or(z.literal('')),
 });
 
 const testimonialSchema = z.object({
@@ -179,7 +182,10 @@ export async function updateHeroSettingsAction(formData: FormData) {
         buttons: [
             { text: data.button1Text, link: data.button1Link, variant: 'default' },
             { text: data.button2Text, link: data.button2Link, variant: 'outline' },
-        ]
+        ],
+        ctaTitle: data.ctaTitle || '',
+        ctaParagraph: data.ctaParagraph || '',
+        ctaButtonText: data.ctaButtonText || '',
     };
 
     await updateHeroSettingsData(newSettings);

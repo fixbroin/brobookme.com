@@ -258,13 +258,13 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
            <SidebarTitle>
             {siteSettings?.branding ? (
               <div className="flex items-center gap-2">
                 <Image src={siteSettings.branding.logoUrl} alt={siteSettings.branding.siteName} width={32} height={32} />
-                <h1 className="text-xl font-bold">{siteSettings.branding.siteName}</h1>
+                <h1 className="text-xl font-bold group-data-[state=collapsed]:hidden">{siteSettings.branding.siteName}</h1>
               </div>
             ) : (
               <Logo />

@@ -291,6 +291,9 @@ export type HeroSettings = {
     imageUrl: string; // Fallback
     clickUrl?: string;
     buttons: HeroButton[];
+    ctaTitle?: string;
+    ctaParagraph?: string;
+    ctaButtonText?: string;
 }
 
 export type FaqItem = {

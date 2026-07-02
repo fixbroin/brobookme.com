@@ -271,8 +271,11 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
       initial={{ opacity: 0, x: 60 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="min-h-screen bg-muted/40 flex flex-col items-center p-4 md:py-4 md:px-8"
+      className="min-h-screen bg-muted/40 flex flex-col items-center p-4 md:py-4 md:px-8 relative overflow-hidden"
     >
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none" />
+      <div className="absolute left-1/3 top-0 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
       <header className="w-full max-w-7xl mx-auto">
         <div className="flex h-14 items-center justify-between rounded-lg bg-background px-4 shadow-sm border">
             <Link href={`/${provider.username}`} className="flex items-center gap-2">
@@ -346,31 +349,99 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         </div>
       </header>
 
-      <div className="container max-w-7xl mx-auto pt-4 md:pt-8">
+      <div className="container max-w-7xl mx-auto pt-4 md:pt-8 relative z-10">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes float-slow {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+          }
+          @keyframes float-reverse {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(8px) rotate(-2deg); }
+          }
+          .animate-float-slow {
+            animation: float-slow 7s ease-in-out infinite;
+          }
+          .animate-float-reverse {
+            animation: float-reverse 9s ease-in-out infinite;
+          }
+        `}} />
+        
         <ScrollAnimation>
-            <div className="mb-12 flex flex-col items-center text-center">
-                <Avatar className="h-36 w-36 mb-6 border-8 border-background shadow-2xl">
-                    <Image 
-                        src={provider.logoUrl || logo.imageUrl} 
-                        alt={provider.name} 
-                        width={144}
-                        height={144}
-                        className="aspect-square h-full w-full object-cover"
-                        onContextMenu={(e) => e.preventDefault()} 
-                        draggable={false} 
-                        priority
-                    />
-                    <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <h1 className="text-4xl font-bold tracking-tight">{provider.name}</h1>
-                <p className="mt-4 max-w-3xl text-lg text-muted-foreground">{provider.description}</p>
+            <div className="relative mb-12 rounded-[2.5rem] overflow-hidden border border-primary/10 bg-background shadow-[0_20px_50px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+                {/* Banner Gradient Background with Organic Curves and Floral Art */}
+                <div className="h-44 md:h-60 w-full bg-gradient-to-tr from-[#fbcfe8] via-[#fef3c7] to-[#ccfbf1] dark:from-[#311042] dark:via-[#1e1135] dark:to-[#0f172a] relative overflow-hidden">
+                    {/* Glowing Accent Blobs */}
+                    <div className="absolute -top-10 -left-10 w-44 h-44 bg-pink-300/30 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute -bottom-20 -right-10 w-64 h-64 bg-teal-200/20 rounded-full blur-3xl" />
+                    
+                    {/* Wavy lines/Organic curves in background */}
+                    <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                      <path fill="none" stroke="currentColor" strokeWidth="2" d="M0,160 C320,300 480,100 800,240 C1120,380 1280,120 1440,160" />
+                      <path fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="5,5" d="M0,100 C320,200 640,50 960,180 C1280,310 1380,150 1440,120" />
+                    </svg>
+
+                    {/* Flower Line Art - Left (Float Slow) */}
+                    <div className="absolute left-6 top-4 w-24 h-24 text-pink-600/35 dark:text-pink-400/25 animate-float-slow pointer-events-none">
+                      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        {/* Leaf stem */}
+                        <path d="M10,80 C30,70 50,40 45,20" />
+                        <path d="M45,20 C55,10 65,15 60,25 C55,35 45,30 45,20 Z" fill="currentColor" fillOpacity="0.05" />
+                        <path d="M25,60 C35,55 42,58 38,68 C34,78 25,72 25,60 Z" fill="currentColor" fillOpacity="0.05" />
+                        <path d="M38,42 C48,37 55,40 51,50 C47,60 38,54 38,42 Z" fill="currentColor" fillOpacity="0.05" />
+                      </svg>
+                    </div>
+
+                    {/* Flower Line Art - Right (Float Reverse) */}
+                    <div className="absolute right-8 top-6 w-28 h-28 text-teal-600/30 dark:text-teal-400/20 animate-float-reverse pointer-events-none">
+                      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        {/* Flower stem and head */}
+                        <path d="M90,90 C70,70 60,40 70,10" />
+                        <circle cx="70" cy="10" r="10" stroke="currentColor" />
+                        {/* Petals */}
+                        <path d="M70,0 C74,-12 66,-12 70,0 Z" fill="currentColor" fillOpacity="0.1" />
+                        <path d="M70,20 C74,32 66,32 70,20 Z" fill="currentColor" fillOpacity="0.1" />
+                        <path d="M80,10 C92,14 92,6 80,10 Z" fill="currentColor" fillOpacity="0.1" />
+                        <path d="M60,10 C48,14 48,6 60,10 Z" fill="currentColor" fillOpacity="0.1" />
+                      </svg>
+                    </div>
+
+                    {/* Wavy Curve Bottom Divider */}
+                    <svg className="absolute bottom-0 left-0 w-full h-12 text-[#fefaf6] dark:text-[#18122b] fill-current pointer-events-none" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                        <path d="M0,64 C288,128 576,0 864,64 C1152,128 1296,64 1440,32 L1440,120 L0,120 Z" />
+                    </svg>
+                </div>
+                {/* Content Area with Squirclish Profile Border */}
+                <div className="px-6 pb-10 pt-6 flex flex-col items-center text-center relative z-20 w-full bg-gradient-to-b from-[#fefaf6] via-background to-background dark:from-[#18122b] dark:via-background dark:to-background border-t border-primary/5">
+                    <div className="h-32 w-32 md:h-40 md:w-40 border-[6px] border-background shadow-2xl bg-background rounded-[2rem] md:rounded-[2.5rem] overflow-hidden flex items-center justify-center -mt-20 md:-mt-28 relative z-30">
+                        <Image 
+                            src={provider.logoUrl || logo.imageUrl} 
+                            alt={provider.name} 
+                            width={160}
+                            height={160}
+                            className="aspect-square h-full w-full object-cover rounded-[1.5rem] md:rounded-[2rem]"
+                            onContextMenu={(e) => e.preventDefault()} 
+                            draggable={false} 
+                            priority
+                        />
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mt-6 text-foreground">{provider.name}</h1>
+                    <p className="mt-4 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed font-medium bg-background/60 dark:bg-background/20 backdrop-blur-sm px-6 py-4 rounded-[1.5rem] border border-primary/5 shadow-sm">
+                        {provider.description}
+                    </p>
+                </div>
             </div>
         </ScrollAnimation>
           
         {provider.settings.enableServicesPage ? (
-            <section className="w-full max-w-7xl mx-auto">
+            <section className="w-full max-w-7xl mx-auto pt-12">
                 <ScrollAnimation>
-                    <h2 className="text-3xl font-bold tracking-tight text-center mb-12">Our Services</h2>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">Our Services</h2>
+                    <div className="flex justify-center mb-12">
+                        <svg className="w-24 h-3 text-primary/30" viewBox="0 0 100 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0,5 C30,10 70,0 100,5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                    </div>
                 </ScrollAnimation>
                 <ScrollAnimation delay={0.1}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -381,9 +452,9 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                              const buttonText = s.quantityEnabled && quantity > 1 ? `Book Now (${currency?.symbol}${totalPrice})` : 'Book Now';
 
                              return (
-                                <Card key={s.id} className="flex flex-col group overflow-hidden">
+                                <Card key={s.id} className="flex flex-col h-full group overflow-hidden rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
                                     <div className="p-4 flex flex-col flex-1">
-                                        <Link href={`/${provider.username}/services/${s.slug || s.id}`} className="aspect-square w-full relative mb-4 overflow-hidden rounded-lg">
+                                        <Link href={`/${provider.username}/services/${s.slug || s.id}`} className="aspect-square w-full relative mb-4 overflow-hidden rounded-[1.5rem]">
                                             <Image
                                                 src={s.imageUrl}
                                                 alt={s.title}
@@ -395,10 +466,10 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                             />
                                         </Link>
                                         <Link href={`/${provider.username}/services/${s.slug || s.id}`}>
-                                            <h4 className="font-semibold hover:text-primary transition-colors">{s.title}</h4>
+                                            <h4 className="font-bold hover:text-primary transition-colors text-lg">{s.title}</h4>
                                         </Link>
                                         <p className="text-sm text-muted-foreground mt-1 flex-1 line-clamp-2">{s.description}</p>
-                                        <div className="text-lg font-bold mt-2">
+                                        <div className="text-lg font-extrabold mt-2">
                                             {s.offerPrice != null && s.offerPrice < s.price ? (
                                                 <span><span className="line-through text-muted-foreground text-sm">{currency?.symbol}{s.price}</span> {currency?.symbol}{s.offerPrice}</span>
                                             ) : (
@@ -414,12 +485,12 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                                 </div>
                                             )}
                                             <div className="grid grid-cols-2 gap-2">
-                                                <Button asChild variant="outline" className="w-full">
+                                                <Button asChild variant="outline" className="w-full rounded-full">
                                                     <Link href={`/${provider.username}/services/${s.slug || s.id}`}>
                                                         Details
                                                     </Link>
                                                 </Button>
-                                                <Button asChild className="w-full">
+                                                <Button asChild className="w-full rounded-full">
                                                     <Link href={`/${provider.username}/book?serviceSlug=${s.slug || s.id}${s.quantityEnabled ? '&quantity=' + quantity : ''}`}>
                                                         {buttonText}
                                                     </Link>
@@ -454,9 +525,21 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
       </div>
 
        {provider.settings?.testimonials?.enabled && provider.settings.testimonials.items.filter(t => t.enabled).length > 0 && (
-        <section className="w-full max-w-7xl mx-auto pt-16">
+        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+            {/* Visual Curved Spacer */}
+            <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
+                <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0,64 C288,128 576,0 864,64 C1152,128 1296,64 1440,32 L1440,120 L0,120 Z" />
+                </svg>
+            </div>
+            
             <ScrollAnimation>
-                <h2 className="text-3xl font-bold tracking-tight text-center mb-12">⭐ What Our Customers Say</h2>
+                <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent flex items-center justify-center gap-2">⭐ What Our Customers Say</h2>
+                <div className="flex justify-center mb-12">
+                    <svg className="w-24 h-3 text-primary/30" viewBox="0 0 100 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,5 C30,10 70,0 100,5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                </div>
             </ScrollAnimation>
             <ScrollAnimation delay={0.1}>
                 <Carousel 
@@ -469,14 +552,14 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                         {provider.settings.testimonials.items.filter(t => t.enabled).sort((a,b) => a.displayOrder - b.displayOrder).map(testimonial => (
                         <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
                             <div className="h-full p-1">
-                                <Card className="h-full flex flex-col">
+                                <Card className="h-full flex flex-col rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
                                     <CardHeader className="flex-row gap-4 items-center">
-                                        <Avatar className="w-14 h-14">
+                                        <Avatar className="w-14 h-14 rounded-[1rem] overflow-hidden border">
                                             <AvatarImage src={testimonial.imageUrl} alt={testimonial.name} loading="lazy" onContextMenu={(e) => e.preventDefault()} draggable={false} />
                                             <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <h4 className="font-semibold">{testimonial.name}</h4>
+                                            <h4 className="font-bold">{testimonial.name}</h4>
                                             <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                                         </div>
                                     </CardHeader>
@@ -486,7 +569,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                                 <Star key={i} className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30'}`} />
                                             ))}
                                         </div>
-                                        <p className="text-muted-foreground text-sm">"{testimonial.description}"</p>
+                                        <p className="text-muted-foreground text-sm font-medium">"{testimonial.description}"</p>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -510,12 +593,24 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         )}
 
         {galleryItems.length > 0 && provider.settings?.gallery?.enabled && (
-        <section className="w-full max-w-7xl mx-auto pt-16">
+        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+            {/* Visual Curved Spacer */}
+            <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
+                <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0,32 C240,85 480,85 720,32 C960,-21 1200,-21 1440,32 L1440,120 L0,120 Z" />
+                </svg>
+            </div>
+            
             <ScrollAnimation>
-                <h2 className="text-3xl font-bold tracking-tight text-center mb-12 flex items-center justify-center gap-3">
-                    <Camera className="h-8 w-8" />
+                <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent flex items-center justify-center gap-3">
+                    <Camera className="h-8 w-8 text-primary" />
                     {provider.settings.gallery?.title || 'Our Work Gallery'}
                 </h2>
+                <div className="flex justify-center mb-12">
+                    <svg className="w-24 h-3 text-primary/30" viewBox="0 0 100 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,5 C30,10 70,0 100,5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                </div>
             </ScrollAnimation>
             <ScrollAnimation delay={0.1}>
                 <Carousel 
@@ -528,20 +623,20 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                         {galleryItems.map((item, index) => (
                             <CarouselItem key={item.id} className="md:basis-1/2 lg:basis-1/3">
                                 <Card
-                                    className="overflow-hidden cursor-pointer group"
+                                    className="overflow-hidden cursor-pointer group rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out"
                                     onClick={() => setSelectedImageIndex(index)}
                                 >
                                     <CardContent className="p-0">
-                                        <div className="aspect-video relative">
-                                            <Image src={item.imageUrl} alt={item.title || 'Gallery image'} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" onContextMenu={(e) => e.preventDefault()} draggable={false} />
+                                        <div className="aspect-video relative rounded-t-[2rem] overflow-hidden">
+                                            <Image src={item.imageUrl} alt={item.title || 'Gallery image'} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-300 group-hover:scale-105" onContextMenu={(e) => e.preventDefault()} draggable={false} />
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                                                 <Expand className="h-10 w-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                             </div>
                                         </div>
                                         {(item.title || item.caption) && (
-                                            <div className="p-4">
-                                                {item.title && <h4 className="font-semibold">{item.title}</h4>}
-                                                {item.caption && <p className="text-sm text-muted-foreground">{item.caption}</p>}
+                                            <div className="p-5">
+                                                {item.title && <h4 className="font-bold text-lg mb-1">{item.title}</h4>}
+                                                {item.caption && <p className="text-sm text-muted-foreground font-medium">{item.caption}</p>}
                                             </div>
                                         )}
                                     </CardContent>
@@ -566,12 +661,24 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         )}
 
         {blogs.length > 0 && (provider.settings.enableBlogsPage ?? true) && (
-        <section className="w-full max-w-7xl mx-auto pt-16">
+        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+            {/* Visual Curved Spacer */}
+            <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
+                <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0,64 C288,0 576,128 864,64 C1152,0 1296,64 1440,32 L1440,120 L0,120 Z" />
+                </svg>
+            </div>
+            
             <ScrollAnimation>
-                <h2 className="text-3xl font-bold tracking-tight text-center mb-12 flex items-center justify-center gap-3">
+                <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent flex items-center justify-center gap-3">
                     <FileText className="h-8 w-8 text-primary" />
                     Latest Blog Posts
                 </h2>
+                <div className="flex justify-center mb-12">
+                    <svg className="w-24 h-3 text-primary/30" viewBox="0 0 100 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,5 C30,10 70,0 100,5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                </div>
             </ScrollAnimation>
             <ScrollAnimation delay={0.1}>
                 <Carousel 
@@ -584,9 +691,9 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                         {blogs.map(blog => (
                             <CarouselItem key={blog.id} className="md:basis-1/2 lg:basis-1/3">
                                 <div className="h-full p-1">
-                                    <Card className="flex flex-col h-full overflow-hidden group hover:shadow-lg transition-shadow border">
+                                    <Card className="flex flex-col h-full overflow-hidden group border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out rounded-[2rem]">
                                         {blog.imageUrl ? (
-                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="relative aspect-video w-full overflow-hidden block">
+                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="relative aspect-video w-full overflow-hidden block rounded-t-[2rem]">
                                                 <Image
                                                     src={blog.imageUrl}
                                                     alt={blog.title}
@@ -596,7 +703,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                                 />
                                             </Link>
                                         ) : (
-                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="aspect-video w-full bg-muted flex items-center justify-center text-muted-foreground block">
+                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="aspect-video w-full bg-muted flex items-center justify-center text-muted-foreground block rounded-t-[2rem]">
                                                 <FileText className="h-12 w-12" />
                                             </Link>
                                         )}
@@ -610,14 +717,14 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                                     {blog.title}
                                                 </CardTitle>
                                             </Link>
-                                            <p className="text-sm text-muted-foreground line-clamp-3 mt-2">
+                                            <p className="text-sm text-muted-foreground line-clamp-3 mt-2 font-medium">
                                                 {blog.description}
                                             </p>
                                         </CardHeader>
                                         {blog.tags && blog.tags.length > 0 && (
                                             <div className="px-6 pb-4 flex flex-wrap gap-1">
                                                 {blog.tags.slice(0, 3).map((tag, idx) => (
-                                                    <Badge key={idx} variant="secondary" className="text-[10px]">
+                                                    <Badge key={idx} variant="secondary" className="text-[10px] rounded-full">
                                                         #{tag}
                                                     </Badge>
                                                 ))}
@@ -651,12 +758,24 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         )}
 
         {videoItems.length > 0 && provider.settings.videos?.enabled && (
-        <section className="w-full max-w-7xl mx-auto pt-16">
+        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+            {/* Visual Curved Spacer */}
+            <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
+                <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0,32 C240,-21 480,-21 720,32 C960,85 1200,85 1440,32 L1440,120 L0,120 Z" />
+                </svg>
+            </div>
+            
             <ScrollAnimation>
-                <h2 className="text-3xl font-bold tracking-tight text-center mb-12 flex items-center justify-center gap-3">
+                <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent flex items-center justify-center gap-3">
                     <Video className="h-8 w-8 text-primary" />
                     {provider.settings.videos?.title || 'Review Videos'}
                 </h2>
+                <div className="flex justify-center mb-12">
+                    <svg className="w-24 h-3 text-primary/30" viewBox="0 0 100 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,5 C30,10 70,0 100,5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                </div>
             </ScrollAnimation>
             <ScrollAnimation delay={0.1}>
                 <Carousel 
@@ -672,8 +791,8 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                             return (
                                 <CarouselItem key={item.id} className="md:basis-1/2 lg:basis-1/3">
                                     <div className="h-full p-1">
-                                        <Card className="flex flex-col h-full overflow-hidden group hover:shadow-lg transition-shadow border">
-                                            <div className="aspect-video relative bg-muted/35 flex items-center justify-center">
+                                        <Card className="flex flex-col h-full overflow-hidden group border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out rounded-[2rem]">
+                                            <div className="aspect-video relative bg-muted/35 flex items-center justify-center rounded-t-[2rem] overflow-hidden">
                                                 {item.type === 'youtube' && embedUrl ? (
                                                     <iframe
                                                         src={embedUrl}
@@ -691,7 +810,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                                                     />
                                                 )}
                                             </div>
-                                            <CardHeader className="p-4 flex-1">
+                                            <CardHeader className="p-5 flex-1">
                                                 <CardTitle className="text-lg font-bold line-clamp-2">{item.title}</CardTitle>
                                             </CardHeader>
                                         </Card>

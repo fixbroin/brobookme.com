@@ -29,6 +29,9 @@ const defaultHeroSettings: HeroSettings = {
         { text: 'Get Started for Free', link: '/login', variant: 'default' },
         { text: 'View Demo Page', link: '/brobookme', variant: 'outline' },
     ],
+    ctaTitle: 'Ready to Simplify Your Business?',
+    ctaParagraph: 'Join hundreds of professionals who are saving time, reducing no-shows, and growing their business with BroBookMe.',
+    ctaButtonText: 'Start Your 3-Day Free Trial',
 };
 
 const defaultBrandingSettings: BrandingSettings = {
@@ -236,6 +239,27 @@ export default function HeroSettingsPage() {
                                     <Label htmlFor="button2Link">Button 2 Link</Label>
                                     <Input id="button2Link" name="button2Link" defaultValue={heroSettings.buttons[1]?.link} />
                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Bottom Call To Action (CTA) Section</CardTitle>
+                            <CardDescription>Control the signup banner section at the bottom of the landing page.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="ctaTitle">CTA Title</Label>
+                                <Input id="ctaTitle" name="ctaTitle" defaultValue={heroSettings.ctaTitle || 'Ready to Simplify Your Business?'} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="ctaParagraph">CTA Paragraph</Label>
+                                <Textarea id="ctaParagraph" name="ctaParagraph" defaultValue={heroSettings.ctaParagraph || 'Join hundreds of professionals who are saving time, reducing no-shows, and growing their business with BroBookMe.'} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="ctaButtonText">CTA Button Title</Label>
+                                <Input id="ctaButtonText" name="ctaButtonText" defaultValue={heroSettings.ctaButtonText || 'Start Your 3-Day Free Trial'} />
                             </div>
                         </CardContent>
                     </Card>
