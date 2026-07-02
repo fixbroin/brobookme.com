@@ -19,7 +19,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Menu, Star, Expand, ChevronLeft, ChevronRight, Camera, Plus, Minus, FileText, Calendar } from 'lucide-react';
+import { Menu, Star, Expand, ChevronLeft, ChevronRight, Camera, Plus, Minus, FileText, Calendar, Video } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,12 @@ import { useToast } from "@/hooks/use-toast";
 import { getCurrency } from "@/lib/currencies";
 import { formatInTimeZone } from 'date-fns-tz';
 import { ProviderFloatingButtons } from './provider-floating-buttons';
+
+function getYoutubeId(url: string) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 const DotButton: React.FC<{ selected: boolean; onClick: () => void }> = ({ selected, onClick }) => (
     <button
@@ -68,9 +74,16 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
   const [blogSelectedIndex, setBlogSelectedIndex] = useState(0)
   const [blogScrollSnaps, setBlogScrollSnaps] = useState<number[]>([])
 
+  const [videoApi, setVideoApi] = useState<CarouselApi>()
+  const [canScrollPrevVideo, setCanScrollPrevVideo] = useState(false)
+  const [canScrollNextVideo, setCanScrollNextVideo] = useState(false)
+  const [videoSelectedIndex, setVideoSelectedIndex] = useState(0)
+  const [videoScrollSnaps, setVideoScrollSnaps] = useState<number[]>([])
+
   const testimonialAutoplay = useRef(Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true }));
   const galleryAutoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }));
   const blogAutoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: false, stopOnMouseEnter: true }));
+  const videoAutoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   const galleryItems = useMemo(() => 
     provider.settings.gallery?.items.filter(item => item.enabled).sort((a, b) => a.displayOrder - b.displayOrder) || [],
@@ -80,6 +93,11 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
   const blogs = useMemo(() => 
     provider.settings.blogs?.filter(b => b.enabled).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [],
     [provider.settings.blogs]
+  );
+
+  const videoItems = useMemo(() => 
+    provider.settings.videos?.items.filter(item => item.enabled).sort((a, b) => a.displayOrder - b.displayOrder) || [],
+    [provider.settings.videos]
   );
   
   const showNextImage = useCallback(() => {
@@ -131,6 +149,15 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
       blogAutoplay.current.reset()
     },
     [blogApi]
+  )
+
+  const onVideoDotButtonClick = useCallback(
+    (index: number) => {
+      if (!videoApi) return
+      videoApi.scrollTo(index)
+      videoAutoplay.current.reset()
+    },
+    [videoApi]
   )
 
   useEffect(() => {
@@ -189,6 +216,25 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         blogApi.off("reInit", onSelect)
     }
   }, [blogApi])
+
+  useEffect(() => {
+    if (!videoApi) return
+
+    const onSelect = () => {
+        setVideoSelectedIndex(videoApi.selectedScrollSnap())
+        setCanScrollPrevVideo(videoApi.canScrollPrev())
+        setCanScrollNextVideo(videoApi.canScrollNext())
+    }
+    
+    setVideoScrollSnaps(videoApi.scrollSnapList())
+    videoApi.on("select", onSelect)
+    videoApi.on("reInit", onSelect)
+    
+    return () => {
+        videoApi.off("select", onSelect)
+        videoApi.off("reInit", onSelect)
+    }
+  }, [videoApi])
 
 
   const navLinks = [
@@ -597,6 +643,72 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                         key={index}
                         selected={index === blogSelectedIndex}
                         onClick={() => onBlogDotButtonClick(index)}
+                        />
+                    ))}
+                </div>
+            </ScrollAnimation>
+        </section>
+        )}
+
+        {videoItems.length > 0 && provider.settings.videos?.enabled && (
+        <section className="w-full max-w-7xl mx-auto pt-16">
+            <ScrollAnimation>
+                <h2 className="text-3xl font-bold tracking-tight text-center mb-12 flex items-center justify-center gap-3">
+                    <Video className="h-8 w-8 text-primary" />
+                    {provider.settings.videos?.title || 'Review Videos'}
+                </h2>
+            </ScrollAnimation>
+            <ScrollAnimation delay={0.1}>
+                <Carousel 
+                    setApi={setVideoApi} 
+                    opts={{ align: "start", loop: true }}
+                    plugins={[videoAutoplay.current]}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {videoItems.map(item => {
+                            const ytId = item.type === 'youtube' ? getYoutubeId(item.videoUrl) : null;
+                            const embedUrl = ytId ? `https://www.youtube.com/embed/${ytId}` : null;
+                            return (
+                                <CarouselItem key={item.id} className="md:basis-1/2 lg:basis-1/3">
+                                    <div className="h-full p-1">
+                                        <Card className="flex flex-col h-full overflow-hidden group hover:shadow-lg transition-shadow border">
+                                            <div className="aspect-video relative bg-muted/35 flex items-center justify-center">
+                                                {item.type === 'youtube' && embedUrl ? (
+                                                    <iframe
+                                                        src={embedUrl}
+                                                        className="w-full h-full rounded-t-lg border-0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                        title={item.title}
+                                                    />
+                                                ) : (
+                                                    <video
+                                                        src={item.videoUrl}
+                                                        className="w-full h-full object-cover rounded-t-lg"
+                                                        controls
+                                                        playsInline
+                                                    />
+                                                )}
+                                            </div>
+                                            <CardHeader className="p-4 flex-1">
+                                                <CardTitle className="text-lg font-bold line-clamp-2">{item.title}</CardTitle>
+                                            </CardHeader>
+                                        </Card>
+                                    </div>
+                                </CarouselItem>
+                            );
+                        })}
+                    </CarouselContent>
+                    {canScrollPrevVideo && <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 bg-primary text-primary-foreground hidden md:flex" />}
+                    {canScrollNextVideo && <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 bg-primary text-primary-foreground hidden md:flex" />}
+                </Carousel>
+                <div className="flex justify-center gap-2 mt-4">
+                    {videoScrollSnaps.map((_, index) => (
+                        <DotButton
+                        key={index}
+                        selected={index === videoSelectedIndex}
+                        onClick={() => onVideoDotButtonClick(index)}
                         />
                     ))}
                 </div>

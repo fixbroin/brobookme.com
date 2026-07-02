@@ -78,6 +78,15 @@ export type ProviderGalleryItem = {
   displayOrder: number;
 };
 
+export type ProviderVideoItem = {
+  id: string;
+  title: string;
+  videoUrl: string;
+  type: 'youtube' | 'uploaded';
+  enabled: boolean;
+  displayOrder: number;
+};
+
 export type FloatingButtonsSettings = {
     enabled: boolean;
     callNumber: string;
@@ -122,6 +131,11 @@ export type ProviderSettings = {
     enabled: boolean;
     title?: string;
     items: ProviderGalleryItem[];
+  };
+  videos?: {
+    enabled: boolean;
+    title?: string;
+    items: ProviderVideoItem[];
   };
   floatingButtons?: FloatingButtonsSettings;
   blogs?: BlogPost[];

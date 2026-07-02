@@ -806,6 +806,30 @@ export default function SettingsPage() {
                             onCheckedChange={(checked) => handleSettingsChange('enableBlogsPage', checked)}
                         />
                     </div>
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="enable-videos" className="flex flex-col gap-1">
+                                <span>Enable Video Reviews Section</span>
+                                <span className="font-normal text-muted-foreground">Showcase customer review videos on your public booking page.</span>
+                            </Label>
+                            <Switch
+                                id="enable-videos"
+                                checked={settings.videos?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsChange('videos', { ...settings.videos, items: settings.videos?.items || [], enabled: checked, title: settings.videos?.title || 'Review Videos' })}
+                            />
+                        </div>
+                        {settings.videos?.enabled && (
+                            <div className="space-y-2 pt-4 border-t">
+                                <Label htmlFor="videos-title">Video Reviews Section Title</Label>
+                                <Input
+                                    id="videos-title"
+                                    value={settings.videos?.title || ''}
+                                    onChange={(e) => handleSettingsChange('videos', { ...settings.videos, title: e.target.value })}
+                                    placeholder="e.g., Review Videos"
+                                />
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
         </TabsContent>
