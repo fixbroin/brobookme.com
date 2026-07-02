@@ -62,8 +62,15 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
   const [gallerySelectedIndex, setGallerySelectedIndex] = useState(0)
   const [galleryScrollSnaps, setGalleryScrollSnaps] = useState<number[]>([])
 
+  const [blogApi, setBlogApi] = useState<CarouselApi>()
+  const [canScrollPrevBlog, setCanScrollPrevBlog] = useState(false)
+  const [canScrollNextBlog, setCanScrollNextBlog] = useState(false)
+  const [blogSelectedIndex, setBlogSelectedIndex] = useState(0)
+  const [blogScrollSnaps, setBlogScrollSnaps] = useState<number[]>([])
+
   const testimonialAutoplay = useRef(Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true }));
   const galleryAutoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }));
+  const blogAutoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   const galleryItems = useMemo(() => 
     provider.settings.gallery?.items.filter(item => item.enabled).sort((a, b) => a.displayOrder - b.displayOrder) || [],
@@ -117,6 +124,15 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
     [galleryApi]
   )
 
+  const onBlogDotButtonClick = useCallback(
+    (index: number) => {
+      if (!blogApi) return
+      blogApi.scrollTo(index)
+      blogAutoplay.current.reset()
+    },
+    [blogApi]
+  )
+
   useEffect(() => {
     if (!testimonialApi) return
     
@@ -154,6 +170,25 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         galleryApi.off("reInit", onSelect)
     }
   }, [galleryApi])
+
+  useEffect(() => {
+    if (!blogApi) return
+
+    const onSelect = () => {
+        setBlogSelectedIndex(blogApi.selectedScrollSnap())
+        setCanScrollPrevBlog(blogApi.canScrollPrev())
+        setCanScrollNextBlog(blogApi.canScrollNext())
+    }
+    
+    setBlogScrollSnaps(blogApi.scrollSnapList())
+    blogApi.on("select", onSelect)
+    blogApi.on("reInit", onSelect)
+    
+    return () => {
+        blogApi.off("select", onSelect)
+        blogApi.off("reInit", onSelect)
+    }
+  }, [blogApi])
 
 
   const navLinks = [
@@ -493,54 +528,76 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                 </h2>
             </ScrollAnimation>
             <ScrollAnimation delay={0.1}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {blogs.map(blog => (
-                        <Card key={blog.id} className="flex flex-col h-full overflow-hidden group hover:shadow-lg transition-shadow border">
-                            {blog.imageUrl ? (
-                                <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="relative aspect-video w-full overflow-hidden block">
-                                    <Image
-                                        src={blog.imageUrl}
-                                        alt={blog.title}
-                                        fill
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                    />
-                                </Link>
-                            ) : (
-                                <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="aspect-video w-full bg-muted flex items-center justify-center text-muted-foreground block">
-                                    <FileText className="h-12 w-12" />
-                                </Link>
-                            )}
-                            <CardHeader className="flex-1 pb-2">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                                    <Calendar className="h-3.5 w-3.5" />
-                                    <span>{formatInTimeZone(new Date(blog.createdAt), provider.settings.timezone || 'UTC', provider.settings.dateFormat || 'dd/MM/yyyy')}</span>
+                <Carousel 
+                    setApi={setBlogApi} 
+                    opts={{ align: "start", loop: true }}
+                    plugins={[blogAutoplay.current]}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {blogs.map(blog => (
+                            <CarouselItem key={blog.id} className="md:basis-1/2 lg:basis-1/3">
+                                <div className="h-full p-1">
+                                    <Card className="flex flex-col h-full overflow-hidden group hover:shadow-lg transition-shadow border">
+                                        {blog.imageUrl ? (
+                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="relative aspect-video w-full overflow-hidden block">
+                                                <Image
+                                                    src={blog.imageUrl}
+                                                    alt={blog.title}
+                                                    fill
+                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                                />
+                                            </Link>
+                                        ) : (
+                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="aspect-video w-full bg-muted flex items-center justify-center text-muted-foreground block">
+                                                <FileText className="h-12 w-12" />
+                                            </Link>
+                                        )}
+                                        <CardHeader className="flex-1 pb-2">
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                                <Calendar className="h-3.5 w-3.5" />
+                                                <span>{formatInTimeZone(new Date(blog.createdAt), provider.settings.timezone || 'UTC', provider.settings.dateFormat || 'dd/MM/yyyy')}</span>
+                                            </div>
+                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`}>
+                                                <CardTitle className="line-clamp-2 hover:text-primary transition-colors text-lg font-bold">
+                                                    {blog.title}
+                                                </CardTitle>
+                                            </Link>
+                                            <p className="text-sm text-muted-foreground line-clamp-3 mt-2">
+                                                {blog.description}
+                                            </p>
+                                        </CardHeader>
+                                        {blog.tags && blog.tags.length > 0 && (
+                                            <div className="px-6 pb-4 flex flex-wrap gap-1">
+                                                {blog.tags.slice(0, 3).map((tag, idx) => (
+                                                    <Badge key={idx} variant="secondary" className="text-[10px]">
+                                                        #{tag}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <CardFooter className="border-t pt-4 px-6 pb-4 bg-muted/10 flex justify-between items-center">
+                                            <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="text-sm font-semibold text-primary hover:underline flex items-center gap-1 group/btn">
+                                                Read Post
+                                                <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                                            </Link>
+                                        </CardFooter>
+                                    </Card>
                                 </div>
-                                <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`}>
-                                    <CardTitle className="line-clamp-2 hover:text-primary transition-colors text-lg font-bold">
-                                        {blog.title}
-                                    </CardTitle>
-                                </Link>
-                                <p className="text-sm text-muted-foreground line-clamp-3 mt-2">
-                                    {blog.description}
-                                </p>
-                            </CardHeader>
-                            {blog.tags && blog.tags.length > 0 && (
-                                <div className="px-6 pb-4 flex flex-wrap gap-1">
-                                    {blog.tags.slice(0, 3).map((tag, idx) => (
-                                        <Badge key={idx} variant="secondary" className="text-[10px]">
-                                            #{tag}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            )}
-                            <CardFooter className="border-t pt-4 px-6 pb-4 bg-muted/10 flex justify-between items-center">
-                                <Link href={`/${provider.username}/blog/${blog.slug || blog.id}`} className="text-sm font-semibold text-primary hover:underline flex items-center gap-1 group/btn">
-                                    Read Post
-                                    <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                                </Link>
-                            </CardFooter>
-                        </Card>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    {canScrollPrevBlog && <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 bg-primary text-primary-foreground hidden md:flex" />}
+                    {canScrollNextBlog && <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 bg-primary text-primary-foreground hidden md:flex" />}
+                </Carousel>
+                <div className="flex justify-center gap-2 mt-4">
+                    {blogScrollSnaps.map((_, index) => (
+                        <DotButton
+                        key={index}
+                        selected={index === blogSelectedIndex}
+                        onClick={() => onBlogDotButtonClick(index)}
+                        />
                     ))}
                 </div>
             </ScrollAnimation>
