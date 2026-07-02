@@ -139,6 +139,15 @@ export type ProviderSettings = {
   };
   floatingButtons?: FloatingButtonsSettings;
   blogs?: BlogPost[];
+  socialLinks?: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    youtube?: string;
+    linkedin?: string;
+    whatsapp?: string;
+    website?: string;
+  };
 };
 
 export type BlogFaqItem = {

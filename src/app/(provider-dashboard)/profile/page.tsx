@@ -461,6 +461,48 @@ export default function ProfilePage() {
 
               <Card>
                   <CardHeader>
+                      <CardTitle>Social Media Links</CardTitle>
+                      <CardDescription>Add your social media profile links. These will appear in the footer of your public booking page.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                      {[
+                          { id: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/yourhandle' },
+                          { id: 'facebook',  label: 'Facebook',  placeholder: 'https://facebook.com/yourpage' },
+                          { id: 'twitter',   label: 'Twitter / X', placeholder: 'https://x.com/yourhandle' },
+                          { id: 'youtube',   label: 'YouTube',   placeholder: 'https://youtube.com/@yourchannel' },
+                          { id: 'linkedin',  label: 'LinkedIn',  placeholder: 'https://linkedin.com/in/yourprofile' },
+                          { id: 'whatsapp',  label: 'WhatsApp',  placeholder: 'https://wa.me/9876543210' },
+                          { id: 'website',   label: 'Website',   placeholder: 'https://yourwebsite.com' },
+                      ].map(({ id, label, placeholder }) => (
+                          <div key={id} className="space-y-2">
+                              <Label htmlFor={`social-${id}`}>{label}</Label>
+                              <Input
+                                  id={`social-${id}`}
+                                  type="url"
+                                  placeholder={placeholder}
+                                  value={(provider.settings.socialLinks as any)?.[id] || ''}
+                                  onChange={(e) => setProvider({
+                                      ...provider,
+                                      settings: {
+                                          ...provider.settings,
+                                          socialLinks: {
+                                              ...(provider.settings.socialLinks || {}),
+                                              [id]: e.target.value,
+                                          },
+                                      },
+                                  })}
+                              />
+                          </div>
+                      ))}
+                      <Button onClick={handleSaveChanges} disabled={saving}>
+                          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Save Social Links
+                      </Button>
+                  </CardContent>
+              </Card>
+
+              <Card>
+                  <CardHeader>
                       <CardTitle>Security</CardTitle>
                       <CardDescription>Manage your account security settings.</CardDescription>
                   </CardHeader>

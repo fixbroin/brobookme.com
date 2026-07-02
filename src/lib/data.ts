@@ -266,6 +266,8 @@ export async function updateProvider(username: string, data: Partial<Provider>):
     const flattenedData: { [key: string]: any } = {};
     const deepFlatten = (obj: any, prefix = '') => {
         for (const [key, value] of Object.entries(obj)) {
+            // Skip undefined values — Firestore rejects them
+            if (value === undefined) continue;
             const newKey = prefix ? `${prefix}.${key}` : key;
             if (typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length > 0 && !value.hasOwnProperty('seconds')) {
                 deepFlatten(value, newKey);

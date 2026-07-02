@@ -19,7 +19,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Menu, Star, Expand, ChevronLeft, ChevronRight, Camera, Plus, Minus, FileText, Calendar, Video } from 'lucide-react';
+import { Menu, Star, Expand, ChevronLeft, ChevronRight, Camera, Plus, Minus, FileText, Calendar, Video, Instagram, Facebook, Twitter, Youtube, Linkedin, Globe, MessageCircle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -841,8 +841,73 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         )}
 
       <ScrollAnimation>
-        <footer className="mt-8 py-4 text-center text-sm text-muted-foreground">
-            Powered by <Link href="/" className="font-semibold text-primary hover:underline">BroBookMe</Link>
+        <footer className="mt-16 border-t border-border/60">
+          {/* Social links + branding row */}
+          <div className="py-10 flex flex-col items-center gap-6">
+            {/* Provider name */}
+            <p className="text-lg font-bold">{provider.name}</p>
+
+            {/* Social icons */}
+            {provider.settings.socialLinks && Object.values(provider.settings.socialLinks).some(v => !!v) && (
+              <div className="flex items-center gap-3 flex-wrap justify-center">
+                {provider.settings.socialLinks.instagram && (
+                  <Link href={provider.settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-muted hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-900/30 dark:hover:text-pink-400 transition-colors"
+                    aria-label="Instagram">
+                    <Instagram className="h-5 w-5" />
+                  </Link>
+                )}
+                {provider.settings.socialLinks.facebook && (
+                  <Link href={provider.settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-muted hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
+                    aria-label="Facebook">
+                    <Facebook className="h-5 w-5" />
+                  </Link>
+                )}
+                {provider.settings.socialLinks.twitter && (
+                  <Link href={provider.settings.socialLinks.twitter} target="_blank" rel="noopener noreferrer"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-muted hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-sky-900/30 dark:hover:text-sky-400 transition-colors"
+                    aria-label="Twitter / X">
+                    <Twitter className="h-5 w-5" />
+                  </Link>
+                )}
+                {provider.settings.socialLinks.youtube && (
+                  <Link href={provider.settings.socialLinks.youtube} target="_blank" rel="noopener noreferrer"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-muted hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors"
+                    aria-label="YouTube">
+                    <Youtube className="h-5 w-5" />
+                  </Link>
+                )}
+                {provider.settings.socialLinks.linkedin && (
+                  <Link href={provider.settings.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-muted hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-colors"
+                    aria-label="LinkedIn">
+                    <Linkedin className="h-5 w-5" />
+                  </Link>
+                )}
+                {provider.settings.socialLinks.whatsapp && (
+                  <Link href={provider.settings.socialLinks.whatsapp} target="_blank" rel="noopener noreferrer"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-muted hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors"
+                    aria-label="WhatsApp">
+                    <MessageCircle className="h-5 w-5" />
+                  </Link>
+                )}
+                {provider.settings.socialLinks.website && (
+                  <Link href={provider.settings.socialLinks.website} target="_blank" rel="noopener noreferrer"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors"
+                    aria-label="Website">
+                    <Globe className="h-5 w-5" />
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {/* Powered by */}
+            <p className="text-xs text-muted-foreground">
+              Powered by{' '}
+              <Link href="/" className="font-semibold text-primary hover:underline">BroBookMe</Link>
+            </p>
+          </div>
         </footer>
       </ScrollAnimation>
       
