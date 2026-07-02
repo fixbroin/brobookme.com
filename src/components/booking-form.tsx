@@ -480,43 +480,46 @@ export function BookingForm({ provider }: { provider: Provider }) {
     const quantityParam = searchParams.get('quantity');
     const savedStateJSON = localStorage.getItem(localStorageKey);
 
-    if (serviceSlugParam) {
-      localStorage.removeItem(localStorageKey); 
-      const foundService = provider.settings.services?.find(s => 
-        s.slug === serviceSlugParam || s.id === serviceSlugParam
-      );
-      
-      if (foundService) {
-        setService(foundService);
-        setValue('serviceSlug', foundService.slug || foundService.id);
-        setValue('quantity', quantityParam ? parseInt(quantityParam, 10) : 1);
-      }
-      
-      setStep(1); 
-      const nextAvailable = findNextAvailableDate(startOfToday(), provider);
-      setSelectedDate(nextAvailable);
-      setMonth(nextAvailable);
-      return; 
-    }
-
     if (savedStateJSON) {
       try {
         const savedState = JSON.parse(savedStateJSON);
-        setStep(savedState.step || 1);
-        setService(savedState.service || null);
-        setServiceType(savedState.serviceType || null);
+        const savedServiceSlug = savedState.service?.slug || savedState.service?.id;
         
-        const savedDate = savedState.selectedDate ? new Date(savedState.selectedDate) : findNextAvailableDate(startOfToday(), provider);
-        setSelectedDate(savedDate);
-        setMonth(savedState.month ? new Date(savedState.month) : savedDate);
+        if (serviceSlugParam && savedServiceSlug !== serviceSlugParam) {
+          // Different service selected: clear storage and reset to step 1
+          localStorage.removeItem(localStorageKey);
+          const foundService = provider.settings.services?.find(s => 
+            s.slug === serviceSlugParam || s.id === serviceSlugParam
+          );
+          
+          if (foundService) {
+            setService(foundService);
+            setValue('serviceSlug', foundService.slug || foundService.id);
+            setValue('quantity', quantityParam ? parseInt(quantityParam, 10) : 1);
+          }
+          
+          setStep(1); 
+          const nextAvailable = findNextAvailableDate(startOfToday(), provider);
+          setSelectedDate(nextAvailable);
+          setMonth(nextAvailable);
+        } else {
+          // No service parameter, or matches saved state: restore!
+          setStep(savedState.step || 1);
+          setService(savedState.service || null);
+          setServiceType(savedState.serviceType || null);
+          
+          const savedDate = savedState.selectedDate ? new Date(savedState.selectedDate) : findNextAvailableDate(startOfToday(), provider);
+          setSelectedDate(savedDate);
+          setMonth(savedState.month ? new Date(savedState.month) : savedDate);
 
-        setSelectedTime(savedState.selectedTime || null);
-        setUserTimeZone(savedState.userTimeZone || getInitialTimezone());
+          setSelectedTime(savedState.selectedTime || null);
+          setUserTimeZone(savedState.userTimeZone || getInitialTimezone());
 
-        if (savedState.formData) {
-          Object.keys(savedState.formData).forEach(key => {
-            setValue(key as keyof BookingFormValues, savedState.formData[key]);
-          });
+          if (savedState.formData) {
+            Object.keys(savedState.formData).forEach(key => {
+              setValue(key as keyof BookingFormValues, savedState.formData[key]);
+            });
+          }
         }
       } catch (e) {
         localStorage.removeItem(localStorageKey);
@@ -525,6 +528,18 @@ export function BookingForm({ provider }: { provider: Provider }) {
         setMonth(nextAvailable);
       }
     } else {
+      // No saved state: initialize with query param if present
+      if (serviceSlugParam) {
+        const foundService = provider.settings.services?.find(s => 
+          s.slug === serviceSlugParam || s.id === serviceSlugParam
+        );
+        
+        if (foundService) {
+          setService(foundService);
+          setValue('serviceSlug', foundService.slug || foundService.id);
+          setValue('quantity', quantityParam ? parseInt(quantityParam, 10) : 1);
+        }
+      }
       const nextAvailable = findNextAvailableDate(startOfToday(), provider);
       setSelectedDate(nextAvailable);
       setMonth(nextAvailable);
