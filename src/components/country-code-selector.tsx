@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { countries, type Country } from '@/lib/countries';
@@ -81,12 +82,13 @@ export function CountryCodeSelector({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
-           <Image
+            <Image
               src={selectedCountry.flag}
               alt={selectedCountry.name}
               width={20}
               height={15}
               className="object-contain"
+              style={{ width: 'auto', height: 'auto' }}
             />
           <span className="font-medium">{selectedCountry.dial_code}</span>
           <ChevronDown className="h-4 w-4 opacity-50" />
@@ -95,6 +97,9 @@ export function CountryCodeSelector({
       <DialogContent className="p-0">
         <DialogHeader className="p-4 border-b">
           <DialogTitle>Select a Country</DialogTitle>
+          <DialogDescription className="sr-only">
+            Select your country from the list to update your phone country code prefix.
+          </DialogDescription>
         </DialogHeader>
         <Command>
           <CommandInput
@@ -124,6 +129,7 @@ export function CountryCodeSelector({
                           width={24}
                           height={18}
                           className="object-contain"
+                          style={{ width: 'auto', height: 'auto' }}
                         />
                       <span>{country.name}</span>
                     </div>

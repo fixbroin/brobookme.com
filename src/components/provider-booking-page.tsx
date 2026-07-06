@@ -272,14 +272,16 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 60 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="min-h-screen bg-muted/40 flex flex-col items-center p-4 md:py-4 md:px-8 relative"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none" />
-      <div className="absolute left-1/3 top-0 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]" />
+        <div className="absolute left-1/3 top-0 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl" />
+      </div>
       <PublicHeader provider={provider} />
 
       <div className="container max-w-7xl mx-auto pt-4 md:pt-8 relative z-10">
