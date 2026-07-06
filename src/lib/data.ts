@@ -1,7 +1,8 @@
 
 
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, query, where, deleteDoc, serverTimestamp, orderBy, writeBatch, onSnapshot } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, storage } from './firebase';
+import { ref as storageRef, deleteObject } from 'firebase/storage';
 import type { Provider, Booking, BookingStatus, AdminSettings, Plan, EnrichedProvider, Payment, AdminDashboardData, ActivityLog, ReportsData, Testimonial, ServiceTypeSetting, Notification, HeroSettings, ScreenshotsSettings, Service, BlogPost } from './types';
 import { startOfDay, endOfDay, subDays, addDays, getHours, isSameDay as isSameDayFns } from 'date-fns';
 import { sendWelcomeEmail, sendAdminNewProviderNotificationEmail } from './email-templates';
@@ -282,13 +283,70 @@ export async function updateProvider(username: string, data: Partial<Provider>):
     await updateDoc(providerRef, flattenedData);
 }
 
+async function deleteStorageFile(url: string | null | undefined) {
+  if (!url || !url.startsWith('https://firebasestorage.googleapis.com')) return;
+  try {
+    const fileRef = storageRef(storage, url);
+    await deleteObject(fileRef);
+  } catch (error) {
+    console.error(`Failed to delete storage file: ${url}`, error);
+  }
+}
+
 export async function deleteProvider(username: string): Promise<void> {
-  // 1. Fetch provider details first to get email
+  // 1. Fetch provider details first to get images, email, etc.
   const providerRef = doc(db, 'providers', username);
   const providerDoc = await getDoc(providerRef);
   
   if (providerDoc.exists()) {
     const providerData = providerDoc.data() as Provider;
+    
+    // Deleting logo from Firebase Storage
+    if (providerData.logoUrl) {
+      await deleteStorageFile(providerData.logoUrl);
+    }
+    
+    // Deleting banner image if any
+    const bannerUrl = (providerData as any).bannerUrl;
+    if (bannerUrl) {
+      await deleteStorageFile(bannerUrl);
+    }
+
+    // Deleting gallery images from Firebase Storage
+    if (providerData.settings?.gallery?.items) {
+      for (const item of providerData.settings.gallery.items) {
+        if (item.imageUrl) {
+          await deleteStorageFile(item.imageUrl);
+        }
+      }
+    }
+
+    // Deleting blog images from Firebase Storage
+    if (providerData.settings?.blogs) {
+      for (const post of providerData.settings.blogs) {
+        if (post.imageUrl) {
+          await deleteStorageFile(post.imageUrl);
+        }
+      }
+    }
+
+    // Deleting service images from Firebase Storage
+    if (providerData.settings?.services) {
+      for (const service of providerData.settings.services) {
+        if (service.imageUrl) {
+          await deleteStorageFile(service.imageUrl);
+        }
+      }
+    }
+
+    // Deleting uploaded video files from Firebase Storage
+    if (providerData.settings?.videos?.items) {
+      for (const item of providerData.settings.videos.items) {
+        if (item.type === 'uploaded' && item.videoUrl) {
+          await deleteStorageFile(item.videoUrl);
+        }
+      }
+    }
     
     // 2. Delete provider notifications under users/{username}/notifications
     const notificationsCol = collection(db, 'users', username, 'notifications');
@@ -326,18 +384,33 @@ export async function deleteProvider(username: string): Promise<void> {
     await batchBookings.commit();
   }
 
-  // 5. Delete testimonials where providerUsername === username
+  // 5. Delete testimonials and their images
   const testimonialsCol = collection(db, 'testimonials');
   const testimonialsSnapshot = await getDocs(query(testimonialsCol, where('providerUsername', '==', username)));
   if (!testimonialsSnapshot.empty) {
     const batchTestimonials = writeBatch(db);
-    testimonialsSnapshot.docs.forEach((doc) => {
+    for (const doc of testimonialsSnapshot.docs) {
+      const data = doc.data();
+      if (data.imageUrl) {
+        await deleteStorageFile(data.imageUrl);
+      }
       batchTestimonials.delete(doc.ref);
-    });
+    }
     await batchTestimonials.commit();
   }
 
-  // 6. Delete the parent provider document
+  // 6. Delete payment history where providerUsername === username
+  const paymentsCol = collection(db, 'payments');
+  const paymentsSnapshot = await getDocs(query(paymentsCol, where('providerUsername', '==', username)));
+  if (!paymentsSnapshot.empty) {
+    const batchPayments = writeBatch(db);
+    paymentsSnapshot.docs.forEach((doc) => {
+      batchPayments.delete(doc.ref);
+    });
+    await batchPayments.commit();
+  }
+
+  // 7. Delete the parent provider document
   await deleteDoc(providerRef);
 }
 
