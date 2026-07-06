@@ -283,7 +283,61 @@ export async function updateProvider(username: string, data: Partial<Provider>):
 }
 
 export async function deleteProvider(username: string): Promise<void> {
+  // 1. Fetch provider details first to get email
   const providerRef = doc(db, 'providers', username);
+  const providerDoc = await getDoc(providerRef);
+  
+  if (providerDoc.exists()) {
+    const providerData = providerDoc.data() as Provider;
+    
+    // 2. Delete provider notifications under users/{username}/notifications
+    const notificationsCol = collection(db, 'users', username, 'notifications');
+    const notificationsSnapshot = await getDocs(notificationsCol);
+    if (!notificationsSnapshot.empty) {
+      const batchNotifications = writeBatch(db);
+      notificationsSnapshot.docs.forEach((doc) => {
+        batchNotifications.delete(doc.ref);
+      });
+      await batchNotifications.commit();
+    }
+    
+    // 3. Delete provider notifications under users/{email}/notifications (if email is different from username)
+    if (providerData.contact?.email && providerData.contact.email !== username) {
+      const emailNotificationsCol = collection(db, 'users', providerData.contact.email, 'notifications');
+      const emailNotificationsSnapshot = await getDocs(emailNotificationsCol);
+      if (!emailNotificationsSnapshot.empty) {
+        const batchEmailNotifications = writeBatch(db);
+        emailNotificationsSnapshot.docs.forEach((doc) => {
+          batchEmailNotifications.delete(doc.ref);
+        });
+        await batchEmailNotifications.commit();
+      }
+    }
+  }
+
+  // 4. Delete bookings in sub-collection providers/{username}/bookings
+  const bookingsCol = collection(db, `providers/${username}/bookings`);
+  const bookingsSnapshot = await getDocs(bookingsCol);
+  if (!bookingsSnapshot.empty) {
+    const batchBookings = writeBatch(db);
+    bookingsSnapshot.docs.forEach((doc) => {
+      batchBookings.delete(doc.ref);
+    });
+    await batchBookings.commit();
+  }
+
+  // 5. Delete testimonials where providerUsername === username
+  const testimonialsCol = collection(db, 'testimonials');
+  const testimonialsSnapshot = await getDocs(query(testimonialsCol, where('providerUsername', '==', username)));
+  if (!testimonialsSnapshot.empty) {
+    const batchTestimonials = writeBatch(db);
+    testimonialsSnapshot.docs.forEach((doc) => {
+      batchTestimonials.delete(doc.ref);
+    });
+    await batchTestimonials.commit();
+  }
+
+  // 6. Delete the parent provider document
   await deleteDoc(providerRef);
 }
 

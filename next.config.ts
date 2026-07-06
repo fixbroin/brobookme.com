@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    minimumCacheTTL: 31536000, // 1 year (Next.js server-side image cache TTL)
     remotePatterns: [
       {
         protocol: 'https',

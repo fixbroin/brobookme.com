@@ -3,12 +3,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { addDays, differenceInDays, isBefore, startOfToday } from 'date-fns';
-import { updateAdminSettings, getProviderByUsername, updateProvider, getPlan, getAdminSettings, getAllDocsFromCollection, setDocInCollection, getAllProviders as getAllProvidersData, addNotification, getTestimonials as getTestimonialsData, deleteTestimonial as deleteTestimonialData, createTestimonial as createTestimonialData, updateTestimonial as updateTestimonialData, updateHeroSettings as updateHeroSettingsData, getHeroSettings } from './data';
+import { addDays, addMonths, addYears, differenceInDays, isBefore, startOfToday } from 'date-fns';
+import { updateAdminSettings, getProviderByUsername, updateProvider, getPlan, getAdminSettings, getAllDocsFromCollection, setDocInCollection, getAllProviders as getAllProvidersData, addNotification, getTestimonials as getTestimonialsData, deleteTestimonial as deleteTestimonialData, createTestimonial as createTestimonialData, updateTestimonial as updateTestimonialData, updateHeroSettings as updateHeroSettingsData, getHeroSettings, deleteProvider } from './data';
 import type { RazorpaySettings, SmtpSettings, SiteSettings, FaqItem, Testimonial, FooterSettings, ScreenshotsSettings, MarketingSettings, ServiceTypeSetting, PolicySettings, GoogleApiSettings, OutlookApiSettings, AboutSettings, SeoSettings, ScreenshotItem, HeroSettings, BrandingSettings, FloatingButtonsSettings } from './types';
 import { auth, storage, db } from './firebase';
 import { sendPasswordResetEmail as sendFirebasePasswordResetEmail } from 'firebase/auth';
-import { sendAccountStatusEmail, sendExpiryReminderEmail as sendReminderEmailTemplate, sendPlanExpiredEmail } from './email-templates';
+import { sendAccountStatusEmail, sendExpiryReminderEmail as sendReminderEmailTemplate, sendPlanExpiredEmail, sendSubscriptionEmail } from './email-templates';
 import { ref, uploadString, getDownloadURL, deleteObject, uploadBytesResumable } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { doc, writeBatch } from 'firebase/firestore';
@@ -568,5 +568,76 @@ export async function testSmtpConnection(data: SmtpSettings) {
     } catch (error: any) {
         console.error('SMTP Test Connection Failed:', error);
         return { success: false, error: error.message || 'Failed to connect to SMTP server.' };
+    }
+}
+
+export async function assignProviderSubscription(username: string, planId: string) {
+    try {
+        const provider = await getProviderByUsername(username);
+        if (!provider) {
+            return { success: false, error: 'Provider not found.' };
+        }
+
+        const plan = await getPlan(planId);
+        if (!plan) {
+            return { success: false, error: 'Plan not found.' };
+        }
+
+        let newExpiryDate: Date;
+        const now = new Date();
+        
+        switch (plan.duration) {
+          case 'monthly':
+            newExpiryDate = addMonths(now, 1);
+            break;
+          case 'yearly':
+            newExpiryDate = addYears(now, 1);
+            break;
+          case 'lifetime':
+            newExpiryDate = new Date('9999-12-31');
+            break;
+          case 'trial':
+            newExpiryDate = addDays(now, plan.days || 7);
+            break;
+          default:
+            return { success: false, error: 'Invalid plan duration' };
+        }
+
+        await updateProvider(username, {
+            planId: plan.id,
+            planExpiry: newExpiryDate,
+            hasUsedTrial: provider.hasUsedTrial || plan.duration === 'trial'
+        });
+
+        // Add a notification for the provider
+        await addNotification(username, {
+            message: `Admin has assigned the "${plan.name}" subscription plan to your account.`,
+            type: 'general',
+            link: '/subscription'
+        });
+
+        // Send email to provider
+        try {
+            await sendSubscriptionEmail(provider.contact.email, provider.name, plan.name, newExpiryDate, false);
+        } catch (emailError) {
+            console.error("Failed to send subscription assignment email:", emailError);
+        }
+
+        revalidatePath('/admin/providers');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Assign subscription error:", error);
+        return { success: false, error: error.message || 'Failed to assign plan.' };
+    }
+}
+
+export async function adminDeleteProvider(username: string) {
+    try {
+        await deleteProvider(username);
+        revalidatePath('/admin/providers');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Admin delete provider error:", error);
+        return { success: false, error: error.message || 'Failed to delete provider.' };
     }
 }

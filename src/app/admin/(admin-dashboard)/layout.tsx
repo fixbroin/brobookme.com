@@ -43,6 +43,7 @@ import {
 import { listenForNotifications } from '@/lib/data';
 import type { Notification } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import PwaInstallButton from '@/components/pwa-install-button';
 
 
 const ADMIN_EMAIL = 'wecanfix.in@gmail.com';
@@ -246,6 +247,7 @@ export default function AdminDashboardLayout({
             {generateBreadcrumbs()}
         </div>
         <main className="flex-1 p-4 md:p-6">{children}</main>
+        <PwaInstallButton />
       </SidebarInset>
     </SidebarProvider>
   );

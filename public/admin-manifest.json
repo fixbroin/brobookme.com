@@ -1,0 +1,22 @@
+{
+  "name": "BroBookMe Admin",
+  "short_name": "BBM Admin",
+  "description": "BroBookMe Admin Console",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#1e1b4b",
+  "background_color": "#FFFFFF",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone"
+}
