@@ -24,7 +24,6 @@ export async function GET(
     const appLogo = provider.logoUrl || '/android-chrome-192x192.png';
 
     const manifest = {
-      id: `/${username}-pwa`,
       name: appName,
       short_name: appName.slice(0, 12),
       description: appDescription,
