@@ -1,4 +1,5 @@
 {
+  "id": "/provider-pwa",
   "name": "BroBookMe Dashboard",
   "short_name": "BBM Dashboard",
   "description": "Manage your bookings, calendar, and services.",
