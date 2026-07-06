@@ -15,6 +15,7 @@ import { doc, writeBatch } from 'firebase/firestore';
 import Razorpay from 'razorpay';
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
+import { adminAuth } from './firebase-admin';
 
 const razorpaySchema = z.object({
   keyId: z.string().min(1, 'Key ID is required.'),
@@ -633,7 +634,24 @@ export async function assignProviderSubscription(username: string, planId: strin
 
 export async function adminDeleteProvider(username: string) {
     try {
+        // 1. Get provider profile first to find their email
+        const provider = await getProviderByUsername(username);
+        
+        // 2. Delete from Firebase Authentication (Login credentials) if email exists and adminAuth is initialized
+        if (provider?.contact?.email && adminAuth) {
+            try {
+                const userRecord = await adminAuth.getUserByEmail(provider.contact.email);
+                await adminAuth.deleteUser(userRecord.uid);
+                console.log(`Successfully deleted Firebase Auth user with UID: ${userRecord.uid}`);
+            } catch (authError: any) {
+                // If user is not found in Auth (e.g. registered with a different email or already deleted), don't crash
+                console.warn(`Auth deletion warning for ${provider.contact.email}:`, authError.message);
+            }
+        }
+
+        // 3. Delete all Firestore records and Firebase Storage files
         await deleteProvider(username);
+
         revalidatePath('/admin/providers');
         return { success: true };
     } catch (error: any) {
