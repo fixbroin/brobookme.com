@@ -347,7 +347,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                     </svg>
                 </div>
                 {/* Content Area with Squirclish Profile Border */}
-                <div className="px-6 pb-10 pt-6 flex flex-col items-center text-center relative z-20 w-full bg-gradient-to-b from-[#fefaf6] via-background to-background dark:from-[#18122b] dark:via-background dark:to-background border-t border-primary/5">
+                <div className="px-3 pb-7 pt-3 flex flex-col items-center text-center relative z-20 w-full bg-gradient-to-b from-[#fefaf6] via-background to-background dark:from-[#18122b] dark:via-background dark:to-background border-t border-primary/5">
                     <div className="h-32 w-32 md:h-40 md:w-40 border-[6px] border-background shadow-2xl bg-background rounded-[2rem] md:rounded-[2.5rem] overflow-hidden flex items-center justify-center -mt-20 md:-mt-28 relative z-30">
                         <Image 
                             src={provider.logoUrl || logo.imageUrl} 
@@ -361,7 +361,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
                         />
                     </div>
                     <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mt-6 text-foreground">{provider.name}</h1>
-                    <p className="mt-4 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed font-medium bg-background/60 dark:bg-background/20 backdrop-blur-sm px-6 py-4 rounded-[1.5rem] border border-primary/5 shadow-sm">
+                    <p className="mt-4 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed font-medium bg-background/60 dark:bg-background/20 backdrop-blur-sm px-1 py-1 rounded-[1.5rem] border border-primary/5 shadow-sm">
                         {provider.description}
                     </p>
                 </div>
@@ -369,7 +369,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         </ScrollAnimation>
           
         {provider.settings.enableServicesPage ? (
-            <section className="w-full max-w-7xl mx-auto pt-12">
+            <section className="w-full max-w-7xl mx-auto pt-5">
                 <ScrollAnimation>
                     <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">Our Services</h2>
                     <div className="flex justify-center mb-12">
@@ -465,7 +465,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
       </div>
 
        {provider.settings?.testimonials?.enabled && provider.settings.testimonials.items.filter(t => t.enabled).length > 0 && (
-        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+        <section className="w-full max-w-7xl mx-auto pt-10 relative">
             {/* Visual Curved Spacer */}
             <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
                 <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
@@ -533,7 +533,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         )}
 
         {galleryItems.length > 0 && provider.settings?.gallery?.enabled && (
-        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+        <section className="w-full max-w-7xl mx-auto pt-10 relative">
             {/* Visual Curved Spacer */}
             <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
                 <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
@@ -601,7 +601,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         )}
 
         {blogs.length > 0 && (provider.settings.enableBlogsPage ?? true) && (
-        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+        <section className="w-full max-w-7xl mx-auto pt-10 relative">
             {/* Visual Curved Spacer */}
             <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
                 <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
@@ -698,7 +698,7 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
         )}
 
         {videoItems.length > 0 && provider.settings.videos?.enabled && (
-        <section className="w-full max-w-7xl mx-auto pt-16 relative">
+        <section className="w-full max-w-7xl mx-auto pt-10 relative">
             {/* Visual Curved Spacer */}
             <div className="absolute top-0 left-0 w-full overflow-hidden text-background pointer-events-none opacity-20 -translate-y-8">
                 <svg className="w-full h-8 text-primary fill-current" viewBox="0 0 1440 120" preserveAspectRatio="none">
