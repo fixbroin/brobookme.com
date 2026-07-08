@@ -253,24 +253,26 @@ export default function AdminProvidersPage() {
                     <div className="text-right font-medium">{provider.joinedDate ? format(provider.joinedDate, 'PP') : 'N/A'}</div>
                   </div>
 
-                  <div className="pt-2 flex gap-2 items-center">
-                    <Button variant="outline" size="sm" className="flex-1 justify-center" asChild>
-                      <Link href={`/${provider.username}`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                        <span>View Page</span>
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 justify-center" asChild>
-                      <Link href={`/admin/providers/${provider.username}`}>
-                        <BookCopy className="mr-1.5 h-3.5 w-3.5" />
-                        <span>Bookings</span>
-                      </Link>
-                    </Button>
+                  <div className="pt-2 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 justify-center" asChild>
+                        <Link href={`/${provider.username}`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                          <span>View Page</span>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 justify-center" asChild>
+                        <Link href={`/admin/providers/${provider.username}`}>
+                          <BookCopy className="mr-1.5 h-3.5 w-3.5" />
+                          <span>Bookings</span>
+                        </Link>
+                      </Button>
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">More Actions</span>
+                        <Button variant="outline" size="sm" className="w-full justify-center">
+                          <MoreHorizontal className="mr-1.5 h-4 w-4" />
+                          <span>Actions</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
