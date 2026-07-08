@@ -48,11 +48,18 @@ export default function FaqSettingsPage() {
     };
 
     const handleAddNewFaq = () => {
+        const newId = uuidv4();
         const newOrder = faqs.length > 0 ? Math.max(...faqs.map(f => f.displayOrder)) + 1 : 1;
         setFaqs(currentFaqs => [
             ...currentFaqs,
-            { id: uuidv4(), question: '', answer: '', displayOrder: newOrder }
+            { id: newId, question: '', answer: '', displayOrder: newOrder }
         ]);
+        setTimeout(() => {
+            const newFaq = document.getElementById(`faq-item-${newId}`);
+            if (newFaq) {
+                newFaq.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
 
     const handleDeleteFaq = (id: string) => {
@@ -89,7 +96,6 @@ export default function FaqSettingsPage() {
                 <Skeleton className="h-64 w-full" />
                 <div className="flex justify-between">
                     <Skeleton className="h-10 w-32" />
-                    <Skeleton className="h-10 w-32" />
                 </div>
             </div>
         )
@@ -98,12 +104,12 @@ export default function FaqSettingsPage() {
   return (
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">FAQ Section Settings</h1>
                     <p className="text-muted-foreground">Manage the questions and answers on your homepage.</p>
                 </div>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending} className="w-full md:w-auto justify-center">
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save All Settings
                 </Button>
@@ -116,7 +122,7 @@ export default function FaqSettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {faqs.map((faq, index) => (
-                        <div key={faq.id} className="p-4 border rounded-lg space-y-4 relative">
+                        <div key={faq.id} id={`faq-item-${faq.id}`} className="p-4 border rounded-lg space-y-4 relative">
                             <div className="flex justify-between items-center">
                                 <h3 className="font-semibold text-lg">FAQ {index + 1}</h3>
                                 <Button

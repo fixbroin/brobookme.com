@@ -117,12 +117,12 @@ export default function FooterSettingsPage() {
   return (
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Footer Settings</h1>
                     <p className="text-muted-foreground">Manage the content of your website's footer.</p>
                 </div>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending} className="w-full md:w-auto justify-center">
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save All Settings
                 </Button>
@@ -182,12 +182,12 @@ export default function FooterSettingsPage() {
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between items-start">
                             <div className="space-y-1.5">
                                <CardTitle>Social Media Links</CardTitle>
                                <CardDescription>Links to your social media profiles.</CardDescription>
                             </div>
-                            <Button type="button" variant="outline" size="sm" onClick={() => addLink('socialLinks')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
+                            <Button type="button" variant="outline" size="sm" onClick={() => addLink('socialLinks')} className="w-full sm:w-auto justify-center"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {footerState.socialLinks?.map(link => (
@@ -215,12 +215,12 @@ export default function FooterSettingsPage() {
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between items-start">
                              <div className="space-y-1.5">
                                 <CardTitle>Site Links</CardTitle>
                                 <CardDescription>Custom links for your footer navigation.</CardDescription>
                             </div>
-                            <Button type="button" variant="outline" size="sm" onClick={() => addLink('siteLinks')}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
+                            <Button type="button" variant="outline" size="sm" onClick={() => addLink('siteLinks')} className="w-full sm:w-auto justify-center"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {footerState.siteLinks?.map(link => (

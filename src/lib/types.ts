@@ -237,6 +237,7 @@ export type Booking = {
   serviceSlug?: string | null;
   service?: Service; // Added for convenience when enriching booking data
   quantity?: number;
+  deletedByProvider?: boolean;
 };
 
 export type EnrichedBooking = Booking & {

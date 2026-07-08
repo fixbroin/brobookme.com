@@ -55,7 +55,7 @@ export default function DashboardPage() {
           ]);
           setProvider(providerData);
           setPlan(planData);
-          setBookings(bookingsData); 
+          setBookings(bookingsData.filter(b => !b.deletedByProvider)); 
         } catch (error) {
           console.error("Failed to fetch dashboard data", error);
           router.push('/login');

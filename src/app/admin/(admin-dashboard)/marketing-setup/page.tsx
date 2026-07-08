@@ -95,12 +95,12 @@ export default function MarketingSetupPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Marketing Setup</h1>
                     <p className="text-muted-foreground">Manage marketing and tracking integrations for your website.</p>
                 </div>
-                <Button onClick={handleSave} disabled={isPending}>
+                <Button onClick={handleSave} disabled={isPending} className="w-full md:w-auto justify-center">
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Changes
                 </Button>
@@ -111,7 +111,7 @@ export default function MarketingSetupPage() {
             </p>
 
             <Tabs defaultValue="google">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="md:grid md:grid-cols-4">
                     <TabsTrigger value="google">Google</TabsTrigger>
                     <TabsTrigger value="meta">Facebook/Meta</TabsTrigger>
                     <TabsTrigger value="other">Other Platforms</TabsTrigger>

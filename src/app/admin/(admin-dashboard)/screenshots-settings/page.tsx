@@ -59,10 +59,17 @@ export default function ScreenshotsSettingsPage() {
     };
 
     const handleAddScreenshot = () => {
+        const newId = uuidv4();
         setScreenshots(current => [
             ...current,
-            { id: uuidv4(), imageUrl: 'https://picsum.photos/seed/new-screenshot/1200/800', url: '' }
+            { id: newId, imageUrl: 'https://picsum.photos/seed/new-screenshot/1200/800', url: '' }
         ]);
+        setTimeout(() => {
+            const newCard = document.getElementById(`screenshot-card-${newId}`);
+            if (newCard) {
+                newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
     
     const handleDeleteScreenshot = (id: string) => {
@@ -119,16 +126,16 @@ export default function ScreenshotsSettingsPage() {
   return (
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Screenshots Section</h1>
                     <p className="text-muted-foreground">Manage the "See BroBookMe in Action" section on your homepage.</p>
                 </div>
-                 <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={handleAddScreenshot}>
-                        <PlusCircle className="mr-2" /> Add Screenshot
+                 <div className="flex gap-2 w-full md:w-auto">
+                    <Button type="button" variant="outline" className="flex-1 md:flex-none justify-center" onClick={handleAddScreenshot}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Screenshot
                     </Button>
-                    <Button type="submit" disabled={isPending}>
+                    <Button type="submit" disabled={isPending} className="flex-1 md:flex-none justify-center">
                         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Changes
                     </Button>
@@ -152,7 +159,7 @@ export default function ScreenshotsSettingsPage() {
 
             <div className="space-y-6">
                 {screenshots.map((item, index) => (
-                     <Card key={item.id}>
+                     <Card key={item.id} id={`screenshot-card-${item.id}`}>
                          <CardHeader className="flex flex-row items-center justify-between">
                              <CardTitle>Screenshot {index + 1}</CardTitle>
                              <Button type="button" variant="destructive" size="icon" onClick={() => handleDeleteScreenshot(item.id)}>

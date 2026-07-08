@@ -196,12 +196,12 @@ export default function TestimonialsPage() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between items-start">
           <div>
             <CardTitle>Manage Testimonials</CardTitle>
             <CardDescription>Add, edit, and organize customer testimonials.</CardDescription>
           </div>
-          <Button onClick={() => handleOpenForm()}>
+          <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto justify-center">
             <PlusCircle className="mr-2 h-4 w-4" /> Add Testimonial
           </Button>
         </CardHeader>

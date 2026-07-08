@@ -214,8 +214,8 @@ export default function AdminDashboardPage() {
             </Card>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
+          <div className="grid gap-6 lg:grid-cols-3 w-full min-w-0">
+            <Card className="lg:col-span-2 w-full overflow-hidden">
               <CardHeader>
                 <CardTitle>Revenue & Bookings</CardTitle>
                 <CardDescription>
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="w-full overflow-hidden">
               <CardHeader>
                 <CardTitle>Service Type Popularity</CardTitle>
                 <CardDescription>
@@ -289,57 +289,98 @@ export default function AdminDashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Provider</TableHead>
-                      <TableHead>Expires On</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dashboardData.expiringTrials.length > 0 ? (
-                      dashboardData.expiringTrials.map((p) => (
-                        <TableRow key={p.username}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar>
-                                <AvatarImage src={p.logoUrl} />
-                                <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium">{p.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {p.contact.email}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Provider</TableHead>
+                        <TableHead>Expires On</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dashboardData.expiringTrials.length > 0 ? (
+                        dashboardData.expiringTrials.map((p) => (
+                          <TableRow key={p.username}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar>
+                                  <AvatarImage src={p.logoUrl} />
+                                  <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="font-medium">{p.name}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {p.contact.email}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {p.planExpiry && format(p.planExpiry, 'PPP')}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSendReminder(p.contact.email, p.name)}
-                              disabled={isPending}
-                            >
-                              <Send className="mr-2 h-3 w-3" />
-                              Send Reminder
-                            </Button>
+                            </TableCell>
+                            <TableCell>
+                              {p.planExpiry && format(p.planExpiry, 'PPP')}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSendReminder(p.contact.email, p.name)}
+                                disabled={isPending}
+                              >
+                                <Send className="mr-2 h-3 w-3" />
+                                Send Reminder
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center">
+                            No trials are expiring soon.
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center">
-                          No trials are expiring soon.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="block md:hidden space-y-4">
+                  {dashboardData.expiringTrials.length > 0 ? (
+                    dashboardData.expiringTrials.map((p) => (
+                      <div key={p.username} className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={p.logoUrl} />
+                            <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="overflow-hidden">
+                            <div className="font-semibold truncate">{p.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">{p.contact.email}</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t text-sm">
+                          <span className="text-muted-foreground">Expires On:</span>
+                          <span className="font-medium">{p.planExpiry && format(p.planExpiry, 'PPP')}</span>
+                        </div>
+                        <div className="pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-center"
+                            onClick={() => handleSendReminder(p.contact.email, p.name)}
+                            disabled={isPending}
+                          >
+                            <Send className="mr-2 h-3 w-3" />
+                            Send Reminder
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center py-4 text-sm text-muted-foreground border rounded-xl bg-card">
+                      No trials are expiring soon.
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
             <Card className="lg:col-span-2">

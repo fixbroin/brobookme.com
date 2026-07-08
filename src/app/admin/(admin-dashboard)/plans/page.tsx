@@ -188,12 +188,12 @@ export default function AdminPlansPage() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between items-start">
         <div>
           <CardTitle>Manage Subscription Plans</CardTitle>
           <CardDescription>Create, edit, and manage subscription plans for providers.</CardDescription>
         </div>
-        <Button onClick={() => handleOpenForm()}>
+        <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto justify-center">
           <PlusCircle className="mr-2 h-4 w-4" />
           Create New Plan
         </Button>
@@ -204,64 +204,119 @@ export default function AdminPlansPage() {
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order</TableHead>
-                <TableHead>Plan Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Plan Name</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {plans.length > 0 ? (
+                    plans.map((plan) => (
+                      <TableRow key={plan.id}>
+                        <TableCell>{plan.displayOrder}</TableCell>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          {plan.name}
+                          {plan.isFeatured && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
+                        </TableCell>
+                        <TableCell>
+                          {plan.offerPrice && plan.offerPrice < plan.price ? (
+                            <div className="flex items-center gap-2">
+                               <span className="line-through text-muted-foreground">₹{plan.price}</span>
+                               <span>₹{plan.offerPrice}</span>
+                            </div>
+                          ) : `₹${plan.price}` }
+                        </TableCell>
+                        <TableCell className="capitalize">{plan.duration}{plan.duration === 'trial' && ` (${plan.days} days)`}</TableCell>
+                        <TableCell>
+                          <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                            {plan.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                           <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                               <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                               <DropdownMenuItem onClick={() => handleOpenForm(plan)}>Edit</DropdownMenuItem>
+                               <DropdownMenuSeparator />
+                               <DropdownMenuItem className="text-red-500" onClick={() => handleOpenDeleteAlert(plan)}>Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">No plans found. Create one to get started.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="block md:hidden space-y-4">
               {plans.length > 0 ? (
                 plans.map((plan) => (
-                  <TableRow key={plan.id}>
-                    <TableCell>{plan.displayOrder}</TableCell>
-                    <TableCell className="font-medium flex items-center gap-2">
-                      {plan.name}
-                      {plan.isFeatured && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
-                    </TableCell>
-                    <TableCell>
-                      {plan.offerPrice && plan.offerPrice < plan.price ? (
-                        <div className="flex items-center gap-2">
-                           <span className="line-through text-muted-foreground">₹{plan.price}</span>
-                           <span>₹{plan.offerPrice}</span>
+                  <div key={plan.id} className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Order: {plan.displayOrder}</div>
+                        <div className="font-semibold text-lg flex items-center gap-2 mt-0.5">
+                          {plan.name}
+                          {plan.isFeatured && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
                         </div>
-                      ) : `₹${plan.price}` }
-                    </TableCell>
-                    <TableCell className="capitalize">{plan.duration}{plan.duration === 'trial' && ` (${plan.days} days)`}</TableCell>
-                    <TableCell>
+                      </div>
                       <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
                         {plan.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                           <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                           <DropdownMenuItem onClick={() => handleOpenForm(plan)}>Edit</DropdownMenuItem>
-                           <DropdownMenuSeparator />
-                           <DropdownMenuItem className="text-red-500" onClick={() => handleOpenDeleteAlert(plan)}>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t text-sm">
+                      <div className="text-muted-foreground">Price:</div>
+                      <div className="text-right font-medium">
+                        {plan.offerPrice && plan.offerPrice < plan.price ? (
+                          <span className="flex items-center justify-end gap-1.5">
+                             <span className="line-through text-xs text-muted-foreground">₹{plan.price}</span>
+                             <span>₹{plan.offerPrice}</span>
+                          </span>
+                        ) : `₹${plan.price}` }
+                      </div>
+
+                      <div className="text-muted-foreground">Duration:</div>
+                      <div className="text-right font-medium capitalize">
+                        {plan.duration}{plan.duration === 'trial' && ` (${plan.days} days)`}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleOpenForm(plan)}>
+                        Edit
+                      </Button>
+                      <Button variant="destructive" size="sm" className="flex-1" onClick={() => handleOpenDeleteAlert(plan)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">No plans found. Create one to get started.</TableCell>
-                </TableRow>
+                <p className="text-center py-4 text-sm text-muted-foreground border rounded-xl bg-card">
+                  No plans found. Create one to get started.
+                </p>
               )}
-            </TableBody>
-          </Table>
+            </div>
+          </>
         )}
       </CardContent>
 

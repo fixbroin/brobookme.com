@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Loader2, BookCopy, CalendarClock, UserX, KeyRound, UserCheck, CreditCard, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Loader2, BookCopy, CalendarClock, UserX, KeyRound, UserCheck, CreditCard, Trash2, ExternalLink } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,102 +118,205 @@ export default function AdminProvidersPage() {
            {loading ? (
              <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
            ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Subscription</TableHead>
-                  <TableHead>Plan Expiry</TableHead>
-                  <TableHead>Total Bookings</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {providers.length > 0 ? providers.map(provider => (
-                  <TableRow key={provider.username} className={isPending ? 'opacity-50' : ''}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={provider.logoUrl} alt={provider.name} />
-                          <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <div className="font-medium">{provider.name}</div>
-                            <div className="text-sm text-muted-foreground">{provider.contact.email}</div>
+            <>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Provider</TableHead>
+                    <TableHead>Subscription</TableHead>
+                    <TableHead>Plan Expiry</TableHead>
+                    <TableHead>Total Bookings</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {providers.length > 0 ? providers.map(provider => (
+                    <TableRow key={provider.username} className={isPending ? 'opacity-50' : ''}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={provider.logoUrl} alt={provider.name} />
+                            <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                              <div className="font-medium">{provider.name}</div>
+                              <div className="text-sm text-muted-foreground">{provider.contact.email}</div>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getSubscriptionStatus(provider)}
-                    </TableCell>
-                     <TableCell>
-                        {provider.planExpiry ? format(provider.planExpiry, 'PPP') : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                        {provider.totalBookings ?? 0}
-                    </TableCell>
-                    <TableCell>
-                      {provider.joinedDate ? format(provider.joinedDate, 'PPP') : 'N/A'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" disabled={isPending}>
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                             <DropdownMenuItem asChild>
-                                <Link href={`/admin/providers/${provider.username}`}>
-                                    <BookCopy className="mr-2 h-4 w-4" />
-                                    <span>View Bookings</span>
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAction(() => sendProviderPasswordResetEmail(provider.contact.email), 'Password reset email sent.')}>
-                                <KeyRound className="mr-2 h-4 w-4" />
-                                <span>Reset Password</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAction(() => extendProviderTrial(provider.username, 7), 'Provider trial has been extended by 7 days.')}>
-                                <CalendarClock className="mr-2 h-4 w-4" />
-                                <span>Extend Trial (7 days)</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                                 setSelectedProvider(provider);
-                                 setSelectedPlanId(provider.planId || '');
-                                 setIsAssignOpen(true);
-                             }}>
-                                 <CreditCard className="mr-2 h-4 w-4" />
-                                 <span>Assign Subscription Plan</span>
-                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                             <DropdownMenuItem className={provider.isSuspended ? "text-green-600" : "text-red-500"} onClick={() => handleAction(() => toggleProviderSuspension(provider.username, !!provider.isSuspended), `Provider has been ${provider.isSuspended ? 'reinstated' : 'suspended'}.`)}>
-                                 {provider.isSuspended ? <UserCheck className="mr-2 h-4 w-4" /> : <UserX className="mr-2 h-4 w-4" />}
-                                 <span>{provider.isSuspended ? 'Un-suspend' : 'Suspend'} Provider</span>
-                             </DropdownMenuItem>
-                             <DropdownMenuSeparator />
-                             <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20" onClick={() => {
-                                 setSelectedProvider(provider);
-                                 setDeleteConfirmText('');
-                                 setIsDeleteOpen(true);
-                             }}>
-                                 <Trash2 className="mr-2 h-4 w-4" />
-                                 <span>Delete Provider</span>
-                             </DropdownMenuItem>
-                           </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">No providers found.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                      <TableCell>
+                        {getSubscriptionStatus(provider)}
+                      </TableCell>
+                       <TableCell>
+                          {provider.planExpiry ? format(provider.planExpiry, 'PPP') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                          {provider.totalBookings ?? 0}
+                      </TableCell>
+                      <TableCell>
+                        {provider.joinedDate ? format(provider.joinedDate, 'PPP') : 'N/A'}
+                      </TableCell>
+                       <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                           <Button variant="outline" size="sm" asChild disabled={isPending}>
+                             <Link href={`/${provider.username}`} target="_blank" rel="noopener noreferrer">
+                               <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> View Page
+                             </Link>
+                           </Button>
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" disabled={isPending}>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                               <DropdownMenuItem asChild>
+                                  <Link href={`/admin/providers/${provider.username}`}>
+                                      <BookCopy className="mr-2 h-4 w-4" />
+                                      <span>View Bookings</span>
+                                  </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAction(() => sendProviderPasswordResetEmail(provider.contact.email), 'Password reset email sent.')}>
+                                  <KeyRound className="mr-2 h-4 w-4" />
+                                  <span>Reset Password</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAction(() => extendProviderTrial(provider.username, 7), 'Provider trial has been extended by 7 days.')}>
+                                  <CalendarClock className="mr-2 h-4 w-4" />
+                                  <span>Extend Trial (7 days)</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                   setSelectedProvider(provider);
+                                   setSelectedPlanId(provider.planId || '');
+                                   setIsAssignOpen(true);
+                               }}>
+                                   <CreditCard className="mr-2 h-4 w-4" />
+                                   <span>Assign Subscription Plan</span>
+                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                               <DropdownMenuItem className={provider.isSuspended ? "text-green-600" : "text-red-500"} onClick={() => handleAction(() => toggleProviderSuspension(provider.username, !!provider.isSuspended), `Provider has been ${provider.isSuspended ? 'reinstated' : 'suspended'}.`)}>
+                                   {provider.isSuspended ? <UserCheck className="mr-2 h-4 w-4" /> : <UserX className="mr-2 h-4 w-4" />}
+                                   <span>{provider.isSuspended ? 'Un-suspend' : 'Suspend'} Provider</span>
+                               </DropdownMenuItem>
+                               <DropdownMenuSeparator />
+                               <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20" onClick={() => {
+                                   setSelectedProvider(provider);
+                                   setDeleteConfirmText('');
+                                   setIsDeleteOpen(true);
+                               }}>
+                                   <Trash2 className="mr-2 h-4 w-4" />
+                                   <span>Delete Provider</span>
+                               </DropdownMenuItem>
+                             </DropdownMenuContent>
+                          </DropdownMenu>
+                         </div>
+                      </TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">No providers found.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="block md:hidden space-y-4">
+              {providers.length > 0 ? providers.map(provider => (
+                <div key={provider.username} className={`rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm ${isPending ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={provider.logoUrl} alt={provider.name} />
+                      <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="overflow-hidden">
+                      <div className="font-semibold truncate">{provider.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{provider.contact.email}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t text-sm">
+                    <div className="text-muted-foreground">Subscription:</div>
+                    <div className="text-right font-medium">{getSubscriptionStatus(provider)}</div>
+                    
+                    <div className="text-muted-foreground">Plan Expiry:</div>
+                    <div className="text-right font-medium">{provider.planExpiry ? format(provider.planExpiry, 'PP') : 'N/A'}</div>
+                    
+                    <div className="text-muted-foreground">Total Bookings:</div>
+                    <div className="text-right font-medium">{provider.totalBookings ?? 0}</div>
+                    
+                    <div className="text-muted-foreground">Joined:</div>
+                    <div className="text-right font-medium">{provider.joinedDate ? format(provider.joinedDate, 'PP') : 'N/A'}</div>
+                  </div>
+
+                  <div className="pt-2 flex gap-2 items-center">
+                    <Button variant="outline" size="sm" className="flex-1 justify-center" asChild>
+                      <Link href={`/${provider.username}`} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                        <span>View Page</span>
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 justify-center" asChild>
+                      <Link href={`/admin/providers/${provider.username}`}>
+                        <BookCopy className="mr-1.5 h-3.5 w-3.5" />
+                        <span>Bookings</span>
+                      </Link>
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">More Actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleAction(() => sendProviderPasswordResetEmail(provider.contact.email), 'Password reset email sent.')}>
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            <span>Reset Password</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction(() => extendProviderTrial(provider.username, 7), 'Provider trial has been extended by 7 days.')}>
+                            <CalendarClock className="mr-2 h-4 w-4" />
+                            <span>Extend Trial (7 days)</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                             setSelectedProvider(provider);
+                             setSelectedPlanId(provider.planId || '');
+                             setIsAssignOpen(true);
+                         }}>
+                             <CreditCard className="mr-2 h-4 w-4" />
+                             <span>Assign Plan</span>
+                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                         <DropdownMenuItem className={provider.isSuspended ? "text-green-600" : "text-red-500"} onClick={() => handleAction(() => toggleProviderSuspension(provider.username, !!provider.isSuspended), `Provider has been ${provider.isSuspended ? 'reinstated' : 'suspended'}.`)}>
+                             {provider.isSuspended ? <UserCheck className="mr-2 h-4 w-4" /> : <UserX className="mr-2 h-4 w-4" />}
+                             <span>{provider.isSuspended ? 'Un-suspend' : 'Suspend'}</span>
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20" onClick={() => {
+                             setSelectedProvider(provider);
+                             setDeleteConfirmText('');
+                             setIsDeleteOpen(true);
+                         }}>
+                             <Trash2 className="mr-2 h-4 w-4" />
+                             <span>Delete Account</span>
+                         </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              )) : (
+                <p className="text-center py-4 text-sm text-muted-foreground border rounded-xl bg-card">
+                  No providers found.
+                </p>
+              )}
+            </div>
+            </>
            )}
         </CardContent>
         <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>

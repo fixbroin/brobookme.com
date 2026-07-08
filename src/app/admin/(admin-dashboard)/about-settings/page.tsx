@@ -73,13 +73,20 @@ export default function AboutSettingsPage() {
     };
 
     const handleAddTeamMember = () => {
+        const newId = uuidv4();
         setSettings(current => ({
             ...current,
             teamMembers: [
                 ...current.teamMembers,
-                { id: uuidv4(), name: '', role: '', imageUrl: 'https://picsum.photos/seed/new/200/200' }
+                { id: newId, name: '', role: '', imageUrl: 'https://picsum.photos/seed/new/200/200' }
             ]
         }));
+        setTimeout(() => {
+            const newMember = document.getElementById(`team-member-${newId}`);
+            if (newMember) {
+                newMember.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     };
 
     const handleDeleteTeamMember = (id: string) => {
@@ -114,12 +121,12 @@ export default function AboutSettingsPage() {
   return (
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">About Page Settings</h1>
                     <p className="text-muted-foreground">Manage the content for your "About Us" page.</p>
                 </div>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending} className="w-full md:w-auto justify-center">
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save All Settings
                 </Button>
@@ -146,15 +153,15 @@ export default function AboutSettingsPage() {
             </Card>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Team Section</CardTitle>
-                        <CardDescription>Manage the team members displayed on the about page.</CardDescription>
-                    </div>
-                    <Button type="button" variant="outline" size="sm" onClick={handleAddTeamMember}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Member
-                    </Button>
-                </CardHeader>
+            <CardHeader className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between items-start">
+                <div>
+                    <CardTitle>Team Section</CardTitle>
+                    <CardDescription>Manage the team members displayed on the about page.</CardDescription>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={handleAddTeamMember} className="w-full sm:w-auto justify-center">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Member
+                </Button>
+            </CardHeader>
                 <CardContent className="space-y-6">
                      <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -167,7 +174,7 @@ export default function AboutSettingsPage() {
                         </div>
                     </div>
                     {settings.teamMembers.map((member, index) => (
-                        <div key={member.id} className="p-4 border rounded-lg space-y-4 relative">
+                        <div key={member.id} id={`team-member-${member.id}`} className="p-4 border rounded-lg space-y-4 relative">
                             <div className="flex justify-between items-center">
                                 <h3 className="font-semibold text-lg">Team Member {index + 1}</h3>
                                 <Button type="button" variant="destructive" size="icon" onClick={() => handleDeleteTeamMember(member.id)}>

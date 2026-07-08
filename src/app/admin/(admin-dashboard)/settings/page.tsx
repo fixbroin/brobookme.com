@@ -148,7 +148,7 @@ export default function AdminSettingsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="payment">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="md:grid md:grid-cols-3">
                     <TabsTrigger value="payment">Payment Gateway</TabsTrigger>
                     <TabsTrigger value="email">Email (SMTP)</TabsTrigger>
                     <TabsTrigger value="api">API Credentials</TabsTrigger>
@@ -198,12 +198,12 @@ export default function AdminSettingsPage() {
                                 </div>
                                 <p className="text-xs text-muted-foreground">Configure this URL in your Razorpay Dashboard under Settings &gt; Webhooks.</p>
                             </div>
-                            <div className="flex gap-2">
-                                <Button variant="outline" onClick={handleTestConnection} disabled={isTesting || !razorpaySettings.keyId}>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <Button variant="outline" className="w-full sm:w-auto justify-center" onClick={handleTestConnection} disabled={isTesting || !razorpaySettings.keyId}>
                                     {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                                     Test Connection
                                 </Button>
-                                <Button onClick={() => handleSaveSettings('payment')} disabled={isPending}>
+                                <Button className="w-full sm:w-auto justify-center" onClick={() => handleSaveSettings('payment')} disabled={isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Save Payment Settings
                                 </Button>
@@ -257,12 +257,12 @@ export default function AdminSettingsPage() {
                                 </Alert>
                             )}
 
-                            <div className="flex gap-2">
-                                <Button variant="outline" onClick={handleTestSmtpConnection} disabled={isTestingSmtp || !smtpSettings.host}>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <Button variant="outline" className="w-full sm:w-auto justify-center" onClick={handleTestSmtpConnection} disabled={isTestingSmtp || !smtpSettings.host}>
                                     {isTestingSmtp ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MailCheck className="mr-2 h-4 w-4" />}
                                     Test Connection
                                 </Button>
-                                <Button onClick={() => handleSaveSettings('email')} disabled={isPending}>
+                                <Button className="w-full sm:w-auto justify-center" onClick={() => handleSaveSettings('email')} disabled={isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Save Email Settings
                                 </Button>
@@ -289,7 +289,7 @@ export default function AdminSettingsPage() {
                                 <Label htmlFor="googleRedirectUri">Redirect URI</Label>
                                 <Input id="googleRedirectUri" value={googleApiSettings.redirectUri} onChange={e => setGoogleApiSettings({...googleApiSettings, redirectUri: e.target.value})} />
                             </div>
-                             <Button onClick={() => handleSaveSettings('googleApi')} disabled={isPending}>
+                             <Button className="w-full sm:w-auto justify-center" onClick={() => handleSaveSettings('googleApi')} disabled={isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Save Google API Settings
                             </Button>
@@ -313,7 +313,7 @@ export default function AdminSettingsPage() {
                                 <Label htmlFor="outlookRedirectUri">Redirect URI</Label>
                                 <Input id="outlookRedirectUri" value={outlookApiSettings.redirectUri} onChange={e => setOutlookApiSettings({...outlookApiSettings, redirectUri: e.target.value})} />
                             </div>
-                             <Button onClick={() => handleSaveSettings('outlookApi')} disabled={isPending}>
+                             <Button className="w-full sm:w-auto justify-center" onClick={() => handleSaveSettings('outlookApi')} disabled={isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Save Outlook API Settings
                             </Button>

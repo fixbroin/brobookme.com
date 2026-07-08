@@ -103,6 +103,16 @@ export default function ServicesPage() {
 
     if (type === 'included') setNewItemIncluded('');
     else setNewItemExcluded('');
+
+    setTimeout(() => {
+      const container = document.getElementById(`service-${type}-container`);
+      if (container) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
   const handleRemoveItem = (type: 'included' | 'excluded', index: number) => {
@@ -245,12 +255,12 @@ export default function ServicesPage() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between items-start">
           <div>
             <CardTitle>Manage Services</CardTitle>
             <CardDescription>Add, edit, and organize your service offerings.</CardDescription>
           </div>
-          <Button onClick={() => handleOpenForm()}>
+          <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto justify-center">
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Service
           </Button>
         </CardHeader>
@@ -436,7 +446,7 @@ export default function ServicesPage() {
                                 <PlusCircle className="h-4 w-4" />
                             </Button>
                         </div>
-                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
+                        <div id="service-included-container" className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
                             {currentService.included?.map((item, index) => (
                                 <div key={index} className="flex items-center justify-between p-2 rounded-md bg-muted/50 group">
                                     <span className="text-sm truncate mr-2">{item}</span>
@@ -475,7 +485,7 @@ export default function ServicesPage() {
                                 <PlusCircle className="h-4 w-4" />
                             </Button>
                         </div>
-                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
+                        <div id="service-excluded-container" className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
                             {currentService.excluded?.map((item, index) => (
                                 <div key={index} className="flex items-center justify-between p-2 rounded-md bg-muted/50 group">
                                     <span className="text-sm truncate mr-2">{item}</span>

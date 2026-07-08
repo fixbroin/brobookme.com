@@ -84,13 +84,15 @@ export default function BookingsPage() {
         
         setProvider(providerData);
 
-        const enrichedBookings = bookingsData.map(b => {
-            let status: BookingStatus = b.status || 'Upcoming';
-            if (status === 'Upcoming' && new Date(b.dateTime) < new Date()) {
-                status = 'Not Completed';
-            }
-            return { ...b, status };
-        }).filter(b => b.status !== 'Pending') as EnrichedBooking[]; // Filter out pending bookings
+        const enrichedBookings = bookingsData
+          .filter(b => !b.deletedByProvider)
+          .map(b => {
+              let status: BookingStatus = b.status || 'Upcoming';
+              if (status === 'Upcoming' && new Date(b.dateTime) < new Date()) {
+                  status = 'Not Completed';
+              }
+              return { ...b, status };
+          }).filter(b => b.status !== 'Pending') as EnrichedBooking[];
 
         setBookings(enrichedBookings);
       } catch (error) {

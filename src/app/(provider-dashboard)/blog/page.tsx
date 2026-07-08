@@ -182,6 +182,15 @@ export default function BlogManagementPage() {
       ...currentItem,
       faq: [...currentFaq, { question: '', answer: '' }]
     });
+    setTimeout(() => {
+      const container = document.getElementById('blog-faq-list-container');
+      if (container) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
   const handleFaqChange = (index: number, field: 'question' | 'answer', value: string) => {
@@ -512,7 +521,7 @@ export default function BlogManagementPage() {
                     <Plus className="mr-1 h-4 w-4" /> Add FAQ Item
                   </Button>
                 </div>
-                <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                <div id="blog-faq-list-container" className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
                   {currentItem?.faq && currentItem.faq.length > 0 ? (
                     currentItem.faq.map((faqItem, idx) => (
                       <Card key={idx} className="relative p-4 border shadow-sm space-y-2">

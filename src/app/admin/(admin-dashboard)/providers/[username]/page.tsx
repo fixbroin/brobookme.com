@@ -2,7 +2,7 @@
 
 'use client';
 
-import { getBookingsByProvider, getProviderByUsername } from "@/lib/data";
+import { getBookingsByProvider, getProviderByUsername, hardDeleteBooking } from "@/lib/data";
 import {
   Card,
   CardContent,
@@ -23,7 +23,15 @@ import { Badge } from "@/components/ui/badge";
 import type { Booking, BookingStatus, Provider } from "@/lib/types";
 import { formatInTimeZone } from "date-fns-tz";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { notFound, useRouter, useParams } from "next/navigation";
@@ -77,6 +85,32 @@ export default function AdminProviderBookingsPage() {
   }, [username, toast, router]);
 
 
+  const [deleteDialog, setDeleteDialog] = useState<{
+      open: boolean;
+      bookingId: string;
+      isDeletedByProvider: boolean;
+  }>({
+      open: false,
+      bookingId: '',
+      isDeletedByProvider: false
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+        await hardDeleteBooking(username, deleteDialog.bookingId);
+        setBookings(prev => prev.filter(b => b.id !== deleteDialog.bookingId));
+        toast({ title: "Success", description: "Booking has been permanently deleted." });
+        setDeleteDialog(prev => ({ ...prev, open: false }));
+    } catch (error) {
+        toast({ title: "Error", description: "Failed to delete booking.", variant: "destructive" });
+    } finally {
+        setIsDeleting(false);
+    }
+  };
+
+
   if (loading) {
       return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
   }
@@ -112,14 +146,18 @@ export default function AdminProviderBookingsPage() {
           <TableHead>Service</TableHead>
           <TableHead>Date & Time</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {bookings.length > 0 ? (
           bookings.map((booking) => (
-            <TableRow key={booking.id}>
+            <TableRow key={booking.id} className={booking.deletedByProvider ? "bg-red-50/60 dark:bg-red-950/10 hover:bg-red-100/50 dark:hover:bg-red-950/20" : ""}>
               <TableCell>
-                <div className="font-medium">{booking.customerName}</div>
+                <div className="font-medium flex items-center gap-2">
+                    {booking.customerName}
+                    {booking.deletedByProvider && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Deleted by Provider</Badge>}
+                </div>
                 <div className="text-sm text-muted-foreground">{booking.customerEmail}</div>
               </TableCell>
               <TableCell>
@@ -133,11 +171,22 @@ export default function AdminProviderBookingsPage() {
               <TableCell>
                   <Badge variant={getStatusVariant(booking.status)}>{booking.status}</Badge>
               </TableCell>
+              <TableCell className="text-right">
+                  <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                      onClick={() => setDeleteDialog({ open: true, bookingId: booking.id, isDeletedByProvider: !!booking.deletedByProvider })}
+                  >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                  </Button>
+              </TableCell>
             </TableRow>
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={4} className="text-center">No bookings found.</TableCell>
+            <TableCell colSpan={5} className="text-center">No bookings found.</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -179,6 +228,36 @@ export default function AdminProviderBookingsPage() {
           <BookingTable bookings={pastBookings} />
         </CardContent>
       </Card>
+
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}>
+          <DialogContent className="max-w-md mx-auto rounded-xl p-6">
+              <DialogHeader className="space-y-3">
+                  <DialogTitle className="text-xl font-bold flex items-center gap-2 text-destructive">
+                      <Trash2 className="h-5 w-5" />
+                      {deleteDialog.isDeletedByProvider ? "Permanently Delete Booking" : "Force Delete Active Booking"}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground pt-1">
+                      {deleteDialog.isDeletedByProvider 
+                        ? "This booking was soft-deleted by the provider. Permanently deleting it will remove it from the database forever. This action cannot be undone."
+                        : "Warning: This booking is currently active. Force deleting it will remove it from the database forever and erase it from all reports. This action cannot be undone."
+                      }
+                  </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t mt-4 justify-end">
+                  <Button variant="outline" onClick={() => setDeleteDialog(prev => ({ ...prev, open: false }))}>
+                      Cancel
+                  </Button>
+                  <Button 
+                      variant="destructive" 
+                      onClick={confirmDelete}
+                      disabled={isDeleting}
+                  >
+                      {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {deleteDialog.isDeletedByProvider ? "Permanently Delete" : "Force Delete"}
+                  </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }

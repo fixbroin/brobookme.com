@@ -42,7 +42,8 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingSocial, setSavingSocial] = useState(false);
   const [changingUsername, setChangingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
@@ -185,9 +186,9 @@ export default function ProfilePage() {
     // The actual deletion from storage and DB happens on save
   }
 
-  const handleSaveChanges = async () => {
+  const handleSaveProfile = async () => {
     if (!provider) return;
-    setSaving(true);
+    setSavingProfile(true);
     setUploadProgress(null);
 
     let updatedProviderData = { ...provider };
@@ -217,20 +218,32 @@ export default function ProfilePage() {
             );
         });
       } else if (previewUrl === null && provider.logoUrl) {
-        // If the photo was removed (preview is null but original provider had a logo)
+        // If the photo was removed
         const oldStorageRef = ref(storage, provider.logoUrl);
         try {
             await deleteObject(oldStorageRef);
         } catch (error: any) {
              if (error.code !== 'storage/object-not-found') {
-                console.warn("Could not delete old logo, it might not exist:", error);
+                console.warn("Could not delete old logo:", error);
              }
         }
         updatedProviderData.logoUrl = '';
       }
 
-      await updateProvider(provider.username, updatedProviderData);
-      setProvider(updatedProviderData);
+      await updateProvider(provider.username, {
+        name: updatedProviderData.name,
+        description: updatedProviderData.description,
+        contact: updatedProviderData.contact,
+        logoUrl: updatedProviderData.logoUrl
+      });
+
+      setProvider(prev => prev ? { 
+        ...prev, 
+        name: updatedProviderData.name,
+        description: updatedProviderData.description,
+        contact: updatedProviderData.contact,
+        logoUrl: updatedProviderData.logoUrl
+      } : null);
       setFileToUpload(null);
       setUploadProgress(null);
 
@@ -247,8 +260,31 @@ export default function ProfilePage() {
         variant: "destructive",
       });
     } finally {
-      setSaving(false);
+      setSavingProfile(false);
       setUploadProgress(null);
+    }
+  };
+
+  const handleSaveSocial = async () => {
+    if (!provider) return;
+    setSavingSocial(true);
+    try {
+      await updateProvider(provider.username, {
+        settings: provider.settings
+      });
+      toast({
+        title: "Social Links Updated",
+        description: "Your social media links have been saved.",
+      });
+    } catch (error) {
+      console.error("Error saving social links:", error);
+      toast({
+        title: "Error",
+        description: "Could not save social links. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingSocial(false);
     }
   };
 
@@ -452,8 +488,8 @@ export default function ProfilePage() {
                               <Input id="phone" type="tel" value={provider.contact.phone} onChange={handleInputChange} />
                           </div>
                       </div>
-                      <Button onClick={handleSaveChanges} disabled={saving}>
-                          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <Button onClick={handleSaveProfile} disabled={savingProfile}>
+                          {savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           Save Changes
                       </Button>
                   </CardContent>
@@ -494,8 +530,8 @@ export default function ProfilePage() {
                               />
                           </div>
                       ))}
-                      <Button onClick={handleSaveChanges} disabled={saving}>
-                          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <Button onClick={handleSaveSocial} disabled={savingSocial}>
+                          {savingSocial && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           Save Social Links
                       </Button>
                   </CardContent>
@@ -571,12 +607,12 @@ export default function ProfilePage() {
                       />
                       {uploadProgress !== null && <Progress value={uploadProgress} className="w-full" />}
                       <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={saving}>
+                        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={savingProfile}>
                             <Upload className="mr-2 h-4 w-4" />
                             {previewUrl ? 'Change' : 'Upload'}
                         </Button>
                         {previewUrl && (
-                            <Button variant="ghost" onClick={handleRemovePhoto} disabled={saving}>
+                            <Button variant="ghost" onClick={handleRemovePhoto} disabled={savingProfile}>
                                 <X className="mr-2 h-4 w-4" />
                                 Remove
                             </Button>

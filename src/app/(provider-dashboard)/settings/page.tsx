@@ -261,7 +261,7 @@ export default function SettingsPage() {
       </div>
       
       <Tabs defaultValue="general">
-        <TabsList className="h-auto flex-wrap justify-start">
+        <TabsList className="h-auto justify-start">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="availability">Availability</TabsTrigger>

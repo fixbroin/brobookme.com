@@ -475,7 +475,7 @@ export async function getBookingsForDay(username: string, date: Date): Promise<B
           dateTime: data.dateTime.toDate(),
       } as Booking;
   });
-  return bookings;
+  return bookings.filter(b => !b.deletedByProvider);
 }
 
 export async function addBooking(bookingData: Omit<Booking, 'id' | 'status'>, initialStatus: BookingStatus): Promise<string> {
@@ -499,6 +499,11 @@ export async function updateBookingStatus(providerUsername: string, bookingId: s
 }
 
 export async function deleteBooking(providerUsername: string, bookingId: string): Promise<void> {
+  const bookingRef = doc(db, `providers/${providerUsername}/bookings`, bookingId);
+  await updateDoc(bookingRef, { deletedByProvider: true });
+}
+
+export async function hardDeleteBooking(providerUsername: string, bookingId: string): Promise<void> {
   const bookingRef = doc(db, `providers/${providerUsername}/bookings`, bookingId);
   await deleteDoc(bookingRef);
 }
@@ -524,7 +529,7 @@ export async function getAllProviders(): Promise<EnrichedProvider[]> {
     return {
       ...provider,
       plan,
-      totalBookings: bookings.length
+      totalBookings: bookings.filter(b => !b.deletedByProvider).length
     };
   }));
 

@@ -14,7 +14,7 @@ import {
   SidebarTitle,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LayoutDashboard, Settings, User as UserIcon, Loader2, CalendarCheck, LogOut, CreditCard, CalendarX, Home, CalendarDays, Bell, ConciergeBell, Blocks, Star, GalleryHorizontal, Phone, BookOpen, Video } from "lucide-react";
+import { LayoutDashboard, Settings, User as UserIcon, Loader2, CalendarCheck, LogOut, CreditCard, CalendarX, Home, CalendarDays, Bell, ConciergeBell, Blocks, Star, GalleryHorizontal, Phone, BookOpen, Video, Globe } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -263,7 +263,7 @@ export default function DashboardLayout({
            </SidebarTitle>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
+          <SidebarMenu className="pb-24">
             <NavMenuItem href="/dashboard" tooltip="Dashboard" icon={LayoutDashboard}>
               Dashboard
             </NavMenuItem>
@@ -315,33 +315,33 @@ export default function DashboardLayout({
         <SidebarFooter>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
+      <SidebarInset className="min-w-0 relative">
+        <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
             </div>
             <div className="flex flex-1 items-center justify-end gap-2 md:gap-4">
-                <Button variant="outline" asChild size="sm" className="px-2 md:px-4">
-                    <Link href={bookingPageUrl}>
-                       <span className="hidden md:inline">View Booking Page</span>
-                       <span className="md:hidden">View Booking Page</span>
+                 <Button variant="outline" className="h-10 px-3 md:px-4 bg-muted/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all duration-200 border border-border/50 shadow-sm rounded-lg text-muted-foreground" asChild>
+                    <Link href={bookingPageUrl} title="View Booking Page">
+                        <Globe className="h-5 w-5 md:mr-2" />
+                        <span className="hidden md:inline">View Booking Page</span>
                     </Link>
                 </Button>
-                <Button variant="ghost" size="icon" className="relative" asChild>
+                <Button variant="outline" size="icon" className="relative h-10 w-10 bg-muted/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all duration-200 border border-border/50 shadow-sm rounded-lg text-muted-foreground" asChild>
                   <Link href="/notifications">
-                    <Bell className="h-5 w-5" />
+                    <Bell className="h-5.5 w-5.5" />
                     {unreadCount > 0 && (
-                        <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0 px-0 py-0 bg-red-500 text-white text-[10px] font-bold border-none">{unreadCount}</Badge>
+                        <Badge className="absolute -top-1.5 -right-1.5 h-5 w-5 flex items-center justify-center rounded-full p-0 px-0 py-0 bg-red-500 text-white text-[10px] font-bold border-none">{unreadCount}</Badge>
                     )}
                   </Link>
                 </Button>
                 <ThemeToggle />
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-full">
-                        <Avatar>
+                      <Button variant="outline" size="icon" className="h-10 w-10 bg-muted/50 hover:bg-primary/10 hover:border-primary/30 border border-border/50 shadow-sm rounded-full transition-all duration-200 p-0 overflow-hidden">
+                        <Avatar className="h-full w-full">
                           <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || ''} />
-                          <AvatarFallback>{provider.name.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
+                          <AvatarFallback className="bg-primary text-primary-foreground font-bold">{provider.name.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
@@ -369,7 +369,7 @@ export default function DashboardLayout({
         <div className="px-4 md:px-6 pt-6">
             {generateBreadcrumbs()}
         </div>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 min-w-0 overflow-x-hidden">{children}</main>
         <NewBookingNotification open={showBookingPopup} onOpenChange={setShowBookingPopup} />
         <PwaInstallButton />
       </SidebarInset>

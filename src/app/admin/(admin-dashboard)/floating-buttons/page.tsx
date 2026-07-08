@@ -77,12 +77,12 @@ export default function FloatingButtonsPage() {
     return (
         <form onSubmit={handleSubmit}>
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between items-start">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Floating Buttons Setup</h1>
                         <p className="text-muted-foreground">Manage the floating Call and WhatsApp buttons for your site.</p>
                     </div>
-                    <Button type="submit" disabled={isPending}>
+                    <Button type="submit" disabled={isPending} className="w-full md:w-auto justify-center">
                         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Settings
                     </Button>

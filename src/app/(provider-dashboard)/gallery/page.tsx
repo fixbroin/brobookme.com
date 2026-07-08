@@ -195,12 +195,12 @@ export default function GalleryPage() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between items-start">
           <div>
             <CardTitle>Manage Gallery</CardTitle>
             <CardDescription>Add, edit, and organize your gallery images.</CardDescription>
           </div>
-          <Button onClick={() => handleOpenForm()}>
+          <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto justify-center">
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Image
           </Button>
         </CardHeader>

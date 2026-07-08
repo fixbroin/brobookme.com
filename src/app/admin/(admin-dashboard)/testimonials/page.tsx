@@ -232,12 +232,12 @@ export default function AdminTestimonialsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Manage Testimonials</h1>
           <p className="text-muted-foreground">Add, edit, or remove testimonials shown on your homepage.</p>
         </div>
-        <Button onClick={() => handleOpenForm()}>
+        <Button onClick={() => handleOpenForm()} className="w-full md:w-auto justify-center">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add New Testimonial
         </Button>

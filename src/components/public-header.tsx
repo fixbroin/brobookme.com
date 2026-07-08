@@ -13,6 +13,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
   SheetClose,
 } from '@/components/ui/sheet';
@@ -94,6 +95,7 @@ export function PublicHeader({ provider }: PublicHeaderProps) {
                                                <h1 className="text-xl font-bold">{provider.name}</h1>
                                            </div>
                                        </SheetTitle>
+                                       <SheetDescription className="sr-only">Mobile Navigation Menu</SheetDescription>
                                    </SheetHeader>
                                    
                                    <nav className="flex flex-col gap-2">
