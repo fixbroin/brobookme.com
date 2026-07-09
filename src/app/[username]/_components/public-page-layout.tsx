@@ -27,7 +27,7 @@ const WhatsAppIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
     </svg>
 );
 
-export function PublicPageLayout({ provider, children, pageName }: { provider: Provider; children: React.ReactNode; pageName: string }) {
+export function PublicPageLayout({ provider, children, pageName, hideFloatingButtons = false }: { provider: Provider; children: React.ReactNode; pageName: string; hideFloatingButtons?: boolean }) {
   const sl = provider.settings.socialLinks;
 
   return (
@@ -129,7 +129,9 @@ export function PublicPageLayout({ provider, children, pageName }: { provider: P
         </div>
       </footer>
 
-      <ProviderFloatingButtons settings={provider.settings.floatingButtons} />
+      {!hideFloatingButtons && (
+        <ProviderFloatingButtons settings={provider.settings.floatingButtons} />
+      )}
       <PwaInstallButton appName={provider.name} appDesc={`Book an appointment with ${provider.name}`} appIcon={provider.logoUrl} />
     </div>
   );

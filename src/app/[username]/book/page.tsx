@@ -84,7 +84,7 @@ export default async function BookAppointmentPage({ params }: Props) {
   const provider = serializeObject(providerData) as Provider;
 
   return (
-    <PublicPageLayout provider={provider} pageName="Book Appointment">
+    <PublicPageLayout provider={provider} pageName="Book Appointment" hideFloatingButtons={true}>
         <Suspense fallback={<div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
             <BookingForm provider={provider} />
         </Suspense>

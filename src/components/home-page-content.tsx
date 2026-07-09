@@ -217,12 +217,12 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
 
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <Image src={settings.branding.logoUrl} alt={`${settings.branding.siteName} logo`} width={32} height={32} onContextMenu={(e) => e.preventDefault()} draggable={false} />
-            <h1 className="text-2xl font-bold">{settings.branding.siteName}</h1>
+    <div className="flex min-h-screen flex-col bg-background min-w-0 overflow-x-hidden">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-6 min-w-0">
+          <Link href="/" className="flex items-center gap-1.5 transition-opacity hover:opacity-80 shrink-0">
+            <Image src={settings.branding.logoUrl} alt={`${settings.branding.siteName} logo`} width={28} height={28} className="shrink-0 object-contain" onContextMenu={(e) => e.preventDefault()} draggable={false} />
+            <h1 className="text-lg md:text-xl font-bold tracking-tight whitespace-nowrap">{settings.branding.siteName}</h1>
           </Link>
           <nav className="hidden items-center gap-1 lg:flex lg:flex-1 justify-center">
             {navLinks.map(link => (
@@ -252,9 +252,9 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
               <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle>
-                     <div className="flex items-center gap-2">
-                      <Image src={settings.branding.logoUrl} alt={`${settings.branding.siteName} logo`} width={32} height={32} onContextMenu={(e) => e.preventDefault()} draggable={false} />
-                      <h1 className="text-2xl font-bold">{settings.branding.siteName}</h1>
+                     <div className="flex items-center gap-1.5 shrink-0">
+                      <Image src={settings.branding.logoUrl} alt={`${settings.branding.siteName} logo`} width={28} height={28} className="shrink-0 object-contain" onContextMenu={(e) => e.preventDefault()} draggable={false} />
+                      <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">{settings.branding.siteName}</h1>
                     </div>
                   </SheetTitle>
                   <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
@@ -285,7 +285,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-14">
         {/* 1. Hero Section */}
         <section className="relative py-20 md:py-28 overflow-hidden">
           <style dangerouslySetInnerHTML={{ __html: `
@@ -345,7 +345,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
             <div className='grid md:grid-cols-2 gap-12 items-center'>
               <div className="text-center md:text-left">
                 <ScrollAnimation>
-                    <h2 className="text-4xl font-extrabold tracking-tight text-foreground md:text-6xl bg-gradient-to-r from-primary via-purple-600 to-accent bg-clip-text text-transparent leading-tight md:leading-none">
+                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-foreground bg-gradient-to-r from-primary via-purple-600 to-accent bg-clip-text text-transparent leading-tight md:leading-none px-1 py-1">
                     {settings.hero.title}
                     </h2>
                 </ScrollAnimation>
