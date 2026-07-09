@@ -275,14 +275,14 @@ function SubscriptionComponent() {
   const daysRemaining = provider.planExpiry ? differenceInDays(provider.planExpiry, new Date()) : null;
 
   // Filter plans based on logic
-  let displayPlans = plans;
+  let displayPlans = plans.filter(p => !p.hidden || p.id === provider.planId);
   // If lifetime, only show lifetime plan (which will appear as "Current Plan")
   if (isLifetime) {
-      displayPlans = plans.filter(p => p.id === provider.planId);
+      displayPlans = displayPlans.filter(p => p.id === provider.planId);
   }
   // If trial has been used, filter it out
   else if (provider.hasUsedTrial) {
-    displayPlans = plans.filter(p => p.duration !== 'trial');
+    displayPlans = displayPlans.filter(p => p.duration !== 'trial');
   }
 
 
@@ -382,8 +382,8 @@ function SubscriptionComponent() {
                       </div>
                       </CardHeader>
                       <CardContent className="flex-1 space-y-2">
-                      {plan.features.map(feature => (
-                          <div key={feature} className="flex items-center gap-2 text-sm">
+                      {(plan.features || []).filter(feature => feature.trim() !== '').map((feature, idx) => (
+                          <div key={`${feature}-${idx}`} className="flex items-center gap-2 text-sm">
                           <Check className="h-4 w-4 text-green-500" />
                           <span className="text-muted-foreground">{feature}</span>
                           </div>

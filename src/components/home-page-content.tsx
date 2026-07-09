@@ -154,9 +154,10 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
     const fetchPlans = async () => {
       try {
         const plansData = await getPlans();
-        // Sort plans by displayOrder
-        plansData.sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
-        setPlans(plansData);
+        const visiblePlans = plansData
+          .filter(p => !p.hidden && p.status === 'active')
+          .sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
+        setPlans(visiblePlans);
       } catch (error) {
         console.error("Failed to fetch plans", error);
       } finally {

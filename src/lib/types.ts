@@ -478,6 +478,7 @@ export type Plan = {
   days?: number | null;
   isFeatured?: boolean;
   displayOrder?: number;
+  hidden?: boolean;
 }
 
 export type Payment = {

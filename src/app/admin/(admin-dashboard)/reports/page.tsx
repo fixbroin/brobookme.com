@@ -196,6 +196,7 @@ export default function AdminReportsPage() {
                                         tickLine={false}
                                         tickMargin={10}
                                         axisLine={false}
+                                        minTickGap={25}
                                     />
                                     <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                                     <Bar dataKey="Bookings" fill="var(--color-Bookings)" radius={4} />
@@ -332,13 +333,13 @@ export default function AdminReportsPage() {
                             <CardTitle>Revenue Trend (Last 30 Days)</CardTitle>
                         </CardHeader>
                         <CardContent>
-                             <ChartContainer config={{}} className="h-[200px] w-full">
+                             <ChartContainer config={{}} className="aspect-auto h-[200px] w-full">
                                 <LineChart
                                     data={data.revenueStats.chartData}
-                                    margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
+                                    margin={{ top: 5, right: 20, left: 20, bottom: 0 }}
                                 >
                                     <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={35} />
                                     <Tooltip content={<ChartTooltipContent hideLabel />} />
                                     <Line dataKey="revenue" type="monotone" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                                 </LineChart>

@@ -71,6 +71,7 @@ const emptyPlan: Partial<Omit<Plan, 'id' | 'createdAt'>> = {
   days: 7,
   isFeatured: false,
   displayOrder: 0,
+  hidden: false,
 };
 
 export default function AdminPlansPage() {
@@ -122,6 +123,7 @@ export default function AdminPlansPage() {
       status: currentPlan.status,
       isFeatured: currentPlan.isFeatured || false,
       displayOrder: Number(currentPlan.displayOrder || 0),
+      hidden: currentPlan.hidden || false,
     };
 
     // Handle optional offerPrice
@@ -177,6 +179,38 @@ export default function AdminPlansPage() {
     });
   };
 
+  const handleToggleStatus = async (plan: Plan) => {
+    try {
+      const newStatus = plan.status === 'active' ? 'inactive' : 'active';
+      // Optimistic state update
+      setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, status: newStatus } : p));
+      await updatePlan(plan.id, { status: newStatus });
+      toast({ title: 'Plan Updated', description: `Plan "${plan.name}" is now ${newStatus}.` });
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update plan status.', variant: 'destructive' });
+      // Revert state
+      const plansData = await getPlans();
+      plansData.sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
+      setPlans(plansData);
+    }
+  };
+
+  const handleToggleHidden = async (plan: Plan) => {
+    try {
+      const newHidden = !plan.hidden;
+      // Optimistic state update
+      setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, hidden: newHidden } : p));
+      await updatePlan(plan.id, { hidden: newHidden });
+      toast({ title: 'Plan Updated', description: `Plan "${plan.name}" is now ${newHidden ? 'hidden' : 'visible'}.` });
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update plan visibility.', variant: 'destructive' });
+      // Revert state
+      const plansData = await getPlans();
+      plansData.sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
+      setPlans(plansData);
+    }
+  };
+
   const handleFormChange = (field: keyof Plan, value: any) => {
     if (!currentPlan) return;
     if (field === 'features') {
@@ -213,7 +247,8 @@ export default function AdminPlansPage() {
                     <TableHead>Plan Name</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Duration</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Hidden</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -225,6 +260,7 @@ export default function AdminPlansPage() {
                         <TableCell className="font-medium flex items-center gap-2">
                           {plan.name}
                           {plan.isFeatured && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
+                          {plan.hidden && <Badge variant="outline" className="border-yellow-500/30 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px]">Hidden</Badge>}
                         </TableCell>
                         <TableCell>
                           {plan.offerPrice && plan.offerPrice < plan.price ? (
@@ -235,31 +271,38 @@ export default function AdminPlansPage() {
                           ) : `₹${plan.price}` }
                         </TableCell>
                         <TableCell className="capitalize">{plan.duration}{plan.duration === 'trial' && ` (${plan.days} days)`}</TableCell>
+                        <TableCell className="text-center">
+                          <Switch
+                            checked={plan.hidden || false}
+                            onCheckedChange={() => handleToggleHidden(plan)}
+                          />
+                        </TableCell>
                         <TableCell>
-                          <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
-                            {plan.status}
-                          </Badge>
+                          <div className="flex items-center justify-center gap-2">
+                            <Switch
+                              checked={plan.status === 'active'}
+                              onCheckedChange={() => handleToggleStatus(plan)}
+                            />
+                            <span className="capitalize text-xs font-medium text-muted-foreground w-12 text-left">
+                              {plan.status}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
-                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                               <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                               <DropdownMenuItem onClick={() => handleOpenForm(plan)}>Edit</DropdownMenuItem>
-                               <DropdownMenuSeparator />
-                               <DropdownMenuItem className="text-red-500" onClick={() => handleOpenDeleteAlert(plan)}>Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => handleOpenForm(plan)}>
+                              Edit
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleOpenDeleteAlert(plan)}>
+                              Delete
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center">No plans found. Create one to get started.</TableCell>
+                      <TableCell colSpan={7} className="text-center">No plans found. Create one to get started.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -276,11 +319,9 @@ export default function AdminPlansPage() {
                         <div className="font-semibold text-lg flex items-center gap-2 mt-0.5">
                           {plan.name}
                           {plan.isFeatured && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
+                          {plan.hidden && <Badge variant="outline" className="border-yellow-500/30 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-[10px]">Hidden</Badge>}
                         </div>
                       </div>
-                      <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
-                        {plan.status}
-                      </Badge>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t text-sm">
@@ -297,6 +338,25 @@ export default function AdminPlansPage() {
                       <div className="text-muted-foreground">Duration:</div>
                       <div className="text-right font-medium capitalize">
                         {plan.duration}{plan.duration === 'trial' && ` (${plan.days} days)`}
+                      </div>
+
+                      <div className="text-muted-foreground flex items-center">Hidden:</div>
+                      <div className="flex justify-end items-center">
+                        <Switch
+                          checked={plan.hidden || false}
+                          onCheckedChange={() => handleToggleHidden(plan)}
+                        />
+                      </div>
+
+                      <div className="text-muted-foreground flex items-center">Status:</div>
+                      <div className="flex justify-end items-center gap-2">
+                        <span className="capitalize text-xs text-muted-foreground">
+                          {plan.status}
+                        </span>
+                        <Switch
+                          checked={plan.status === 'active'}
+                          onCheckedChange={() => handleToggleStatus(plan)}
+                        />
                       </div>
                     </div>
 
@@ -330,23 +390,23 @@ export default function AdminPlansPage() {
             </DialogDescription>
           </DialogHeader>
           {currentPlan && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input id="name" value={currentPlan.name} onChange={e => handleFormChange('name', e.target.value)} className="col-span-3" />
+            <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" value={currentPlan.name} onChange={e => handleFormChange('name', e.target.value)} />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="price" className="text-right">Original Price (₹)</Label>
-                <Input id="price" type="number" value={currentPlan.price} onChange={e => handleFormChange('price', Number(e.target.value))} className="col-span-3" />
+              <div className="space-y-2">
+                <Label htmlFor="price">Original Price (₹)</Label>
+                <Input id="price" type="number" value={currentPlan.price} onChange={e => handleFormChange('price', Number(e.target.value))} />
               </div>
-               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="offerPrice" className="text-right">Offer Price (₹)</Label>
-                <Input id="offerPrice" type="number" value={currentPlan.offerPrice ?? ''} onChange={e => handleFormChange('offerPrice', e.target.value)} className="col-span-3" placeholder="Optional discounted price" />
+               <div className="space-y-2">
+                <Label htmlFor="offerPrice">Offer Price (₹)</Label>
+                <Input id="offerPrice" type="number" value={currentPlan.offerPrice ?? ''} onChange={e => handleFormChange('offerPrice', e.target.value)} placeholder="Optional discounted price" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="duration" className="text-right">Duration</Label>
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration</Label>
                 <Select value={currentPlan.duration} onValueChange={(value: Plan['duration']) => handleFormChange('duration', value)}>
-                  <SelectTrigger className="col-span-3">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
@@ -358,40 +418,54 @@ export default function AdminPlansPage() {
                 </Select>
               </div>
               {currentPlan.duration === 'trial' && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="days" className="text-right">Trial Days</Label>
-                  <Input id="days" type="number" value={currentPlan.days || 7} onChange={e => handleFormChange('days', Number(e.target.value))} className="col-span-3" />
+                <div className="space-y-2">
+                  <Label htmlFor="days">Trial Days</Label>
+                  <Input id="days" type="number" value={currentPlan.days || 7} onChange={e => handleFormChange('days', Number(e.target.value))} />
                 </div>
               )}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="features" className="text-right pt-2">Features</Label>
-                <Textarea id="features" value={Array.isArray(currentPlan.features) ? currentPlan.features.join('\n') : ''} onChange={e => handleFormChange('features', e.target.value)} className="col-span-3" placeholder="One feature per line" />
+              <div className="space-y-2">
+                <Label htmlFor="features">Features</Label>
+                <Textarea id="features" value={Array.isArray(currentPlan.features) ? currentPlan.features.join('\n') : ''} onChange={e => handleFormChange('features', e.target.value)} className="min-h-[120px] resize-y" placeholder="One feature per line" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="displayOrder" className="text-right">Display Order</Label>
-                <Input id="displayOrder" type="number" value={currentPlan.displayOrder ?? 0} onChange={e => handleFormChange('displayOrder', Number(e.target.value))} className="col-span-3" />
+              <div className="space-y-2">
+                <Label htmlFor="displayOrder">Display Order</Label>
+                <Input id="displayOrder" type="number" value={currentPlan.displayOrder ?? 0} onChange={e => handleFormChange('displayOrder', Number(e.target.value))} />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">Status</Label>
-                <div className="col-span-3 flex items-center gap-2">
-                    <Switch
-                        id="status"
-                        checked={currentPlan.status === 'active'}
-                        onCheckedChange={checked => handleFormChange('status', checked ? 'active' : 'inactive')}
-                    />
-                    <span className="capitalize text-sm text-muted-foreground">{currentPlan.status}</span>
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20">
+                <div className="space-y-0.5">
+                  <Label htmlFor="status">Plan Status</Label>
+                  <p className="text-xs text-muted-foreground">Toggle to set the plan active or inactive.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                      id="status"
+                      checked={currentPlan.status === 'active'}
+                      onCheckedChange={checked => handleFormChange('status', checked ? 'active' : 'inactive')}
+                  />
+                  <span className="capitalize text-sm font-medium">{currentPlan.status}</span>
                 </div>
               </div>
-               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="isFeatured" className="text-right">Highlight Plan</Label>
-                <div className="col-span-3 flex items-center gap-2">
-                    <Switch
-                        id="isFeatured"
-                        checked={currentPlan.isFeatured}
-                        onCheckedChange={checked => handleFormChange('isFeatured', checked)}
-                    />
-                    <span className="text-sm text-muted-foreground">Show as "Best Value"</span>
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isFeatured">Highlight Plan</Label>
+                  <p className="text-xs text-muted-foreground">Show as "Best Value" to stand out.</p>
                 </div>
+                <Switch
+                    id="isFeatured"
+                    checked={currentPlan.isFeatured}
+                    onCheckedChange={checked => handleFormChange('isFeatured', checked)}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20">
+                <div className="space-y-0.5">
+                  <Label htmlFor="hidden">Hide Plan</Label>
+                  <p className="text-xs text-muted-foreground">Hide from public landing and provider subscription pages.</p>
+                </div>
+                <Switch
+                    id="hidden"
+                    checked={currentPlan.hidden || false}
+                    onCheckedChange={checked => handleFormChange('hidden', checked)}
+                />
               </div>
             </div>
           )}
