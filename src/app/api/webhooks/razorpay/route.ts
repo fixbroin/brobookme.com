@@ -6,19 +6,19 @@ import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   try {
+    const text = await req.text();
+    const signature = req.headers.get('x-razorpay-signature');
+
+    if (!signature) {
+      return new NextResponse('Signature not found.', { status: 400 });
+    }
+
     const adminSettings = await getAdminSettings();
     const secret = adminSettings?.razorpay?.webhookSecret;
 
     if (!secret) {
       console.error('Razorpay webhook secret is not configured.');
       return new NextResponse('Webhook secret not configured.', { status: 500 });
-    }
-
-    const text = await req.text();
-    const signature = req.headers.get('x-razorpay-signature');
-
-    if (!signature) {
-      return new NextResponse('Signature not found.', { status: 400 });
     }
     
     // 1. Verify the signature

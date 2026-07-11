@@ -44,6 +44,7 @@ import { listenForNotifications } from '@/lib/data';
 import type { Notification } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import PwaInstallButton from '@/components/pwa-install-button';
+import { PushNotificationManager } from '@/components/push-notification-manager';
 
 
 const ADMIN_EMAIL = 'wecanfix.in@gmail.com';
@@ -137,8 +138,10 @@ export default function AdminDashboardLayout({
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="icon">
+    <>
+      <PushNotificationManager userId="admin" type="user" />
+      <SidebarProvider>
+        <Sidebar collapsible="icon">
         <SidebarHeader>
            <SidebarTitle>
             <div className="flex items-center gap-2 px-1">
@@ -251,5 +254,6 @@ export default function AdminDashboardLayout({
         <PwaInstallButton />
       </SidebarInset>
     </SidebarProvider>
+    </>
   );
 }

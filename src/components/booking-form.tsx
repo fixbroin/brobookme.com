@@ -16,6 +16,9 @@ import {
 
 import { createBooking, verifyBookingPayment } from '@/lib/actions';
 import { getBookingsForDay, getAdminSettings } from '@/lib/data';
+import { getMessaging, getToken } from 'firebase/messaging';
+import { app } from '@/lib/firebase';
+import { addFCMToken } from '@/lib/fcm.actions';
 import type { Provider, ServiceType, Booking, BookingFormValues, RazorpaySettings, Service } from '@/lib/types';
 import type { Country } from '@/lib/countries';
 import { countries } from '@/lib/countries';
@@ -323,6 +326,44 @@ const Step2_Details = ({
 
 export function BookingForm({ provider }: { provider: Provider }) {
   const [step, setStep] = useState(1);
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
+      return;
+    }
+
+    const setupFCM = async () => {
+      try {
+        // Register FCM Service Worker with dynamic config parameters from env
+        const config = {
+          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
+          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+        };
+        const queryString = new URLSearchParams(config).toString();
+        const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?v=6&${queryString}`, {
+          scope: '/'
+        });
+        const messaging = getMessaging(app);
+        const token = await getToken(messaging, {
+          serviceWorkerRegistration: registration,
+          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+        });
+        if (token) {
+          setFcmToken(token);
+        }
+      } catch (err) {
+        console.error('Error fetching FCM token in booking form:', err);
+      }
+    };
+
+    const timeout = setTimeout(setupFCM, 1000);
+    return () => clearTimeout(timeout);
+  }, []);
   const [service, setService] = useState<Service | null>(null);
   const [serviceType, setServiceType] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -647,6 +688,11 @@ export function BookingForm({ provider }: { provider: Provider }) {
             payload.set('paymentMethod', paymentMethod);
         }
         
+        const activeFcmToken = fcmToken || (typeof window !== 'undefined' ? sessionStorage.getItem('guest_fcm_token') : null);
+        if (activeFcmToken && currentFormData.customerEmail) {
+            await addFCMToken(currentFormData.customerEmail, activeFcmToken, 'guest');
+        }
+
         const result = await createBooking(payload);
 
         if (result?.errors) {

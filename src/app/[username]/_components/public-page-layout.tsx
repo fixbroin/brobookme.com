@@ -15,6 +15,7 @@ import {
 import { ProviderFloatingButtons } from "@/components/provider-floating-buttons";
 import { PublicHeader } from "@/components/public-header";
 import PwaInstallButton from "@/components/pwa-install-button";
+import { PushNotificationManager } from "@/components/push-notification-manager";
 
 const WhatsAppIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
     <svg
@@ -133,6 +134,7 @@ export function PublicPageLayout({ provider, children, pageName, hideFloatingBut
         <ProviderFloatingButtons settings={provider.settings.floatingButtons} />
       )}
       <PwaInstallButton appName={provider.name} appDesc={`Book an appointment with ${provider.name}`} appIcon={provider.logoUrl} />
+      <PushNotificationManager type="guest" />
     </div>
   );
 }

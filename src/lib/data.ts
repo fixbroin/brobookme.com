@@ -2,6 +2,7 @@
 
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, query, where, deleteDoc, serverTimestamp, orderBy, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db, storage } from './firebase';
+import { sendFCMNotification } from './fcm.actions';
 import { ref as storageRef, deleteObject } from 'firebase/storage';
 import type { Provider, Booking, BookingStatus, AdminSettings, Plan, EnrichedProvider, Payment, AdminDashboardData, ActivityLog, ReportsData, Testimonial, ServiceTypeSetting, Notification, HeroSettings, ScreenshotsSettings, Service, BlogPost } from './types';
 import { startOfDay, endOfDay, subDays, addDays, getHours, isSameDay as isSameDayFns } from 'date-fns';
@@ -895,6 +896,12 @@ export async function addNotification(userId: string, notification: Omit<Notific
         read: false,
         createdAt: serverTimestamp(),
     });
+
+    try {
+        await sendFCMNotification(userId, 'BroBookMe Alert', notification.message, notification.link || '/', 'user');
+    } catch (error) {
+        console.error('Error sending FCM push notification via addNotification:', error);
+    }
 }
 
 export function listenForNotifications(username: string, callback: (notifications: Notification[]) => void): () => void {

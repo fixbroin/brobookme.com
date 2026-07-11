@@ -45,6 +45,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { NewBookingNotification } from '@/components/new-booking-notification';
 import PwaInstallButton from '@/components/pwa-install-button';
+import { PushNotificationManager } from '@/components/push-notification-manager';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const PROCESSED_NOTIFICATIONS_KEY = 'processedBookingNotifications';
@@ -248,8 +249,10 @@ export default function DashboardLayout({
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="icon">
+    <>
+      <PushNotificationManager userId={provider.username} type="user" />
+      <SidebarProvider>
+        <Sidebar collapsible="icon">
         <SidebarHeader>
            <SidebarTitle>
             {siteSettings?.branding ? (
@@ -374,5 +377,6 @@ export default function DashboardLayout({
         <PwaInstallButton />
       </SidebarInset>
     </SidebarProvider>
+    </>
   );
 }

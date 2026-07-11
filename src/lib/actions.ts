@@ -4,11 +4,12 @@
 
 import { redirect } from 'next/navigation';
 import { addBooking, getProviderByUsername, updateProvider, getPlan, getAdminSettings, createPaymentRecord, updateBookingStatus, getBookingById, updateBooking, addNotification, getServiceBySlug } from './data';
+import { sendFCMNotification } from './fcm.actions';
 import type { Service, ServiceType, Booking, Plan, Provider, EnrichedProvider, PaymentGatewaySettings } from './types';
 import { BookingSchema } from './schema';
 import { format } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
-import { addDays, addMonths, addYears } from 'date-fns';
+import { addDays, addMonths, addYears, differenceInDays } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 import Razorpay from 'razorpay';
 import Stripe from 'stripe';
@@ -17,7 +18,17 @@ import { sendSubscriptionEmail, sendBookingConfirmationEmail, sendProviderBookin
 import { createGoogleCalendarEvent } from './calendar.actions';
 import { doc, getDoc, setDoc, deleteDoc, writeBatch, collection, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
-import { differenceInDays } from 'date-fns';
+function formatAmount(amt: number, curr: string) {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: curr.toUpperCase(),
+    }).format(amt);
+  } catch (e) {
+    return `${curr.toUpperCase()} ${amt}`;
+  }
+}
+
 
 
 export async function createBooking(
@@ -154,9 +165,13 @@ export async function createBooking(
 
   } else {
     // This handles free bookings or "Pay Later"
+    const currency = provider.settings.currency || 'INR';
+    const formattedPrice = formatAmount(price || 0, currency);
     let paymentDetails = 'This is a free booking.';
     if (isPaidService && data.paymentMethod === 'later') {
-      paymentDetails = 'To be paid after service.';
+      paymentDetails = `To be paid after service: ${formattedPrice}`;
+    } else if (isPaidService) {
+      paymentDetails = `Value: ${formattedPrice}`;
     }
 
     let bookingUpdate: Partial<Booking> = { 
@@ -197,6 +212,18 @@ export async function createBooking(
     const customerBookingDate = formatInTimeZone(bookingDateTime, customerTimezone, dateFormat);
     const customerDisplayTime = `${formatInTimeZone(bookingDateTime, customerTimezone, 'p')} (${customerTimezone.replace(/_/g, ' ')})`;
     const providerDisplayTime = `${formatInTimeZone(bookingDateTime, providerTimeZone, 'p')} (${providerTimeZone.replace(/_/g, ' ')})`;
+
+    try {
+        await sendFCMNotification(
+            data.customerEmail,
+            'Booking Confirmed',
+            `Your booking with ${provider.name} has been confirmed for ${customerBookingDate} at ${customerDisplayTime}.`,
+            `/${provider.username}`,
+            'guest'
+        );
+    } catch (err) {
+        console.error("Failed to send guest FCM notification in createBooking:", err);
+    }
     
     const eventTitle = encodeURIComponent(`Appointment: ${service?.title || data.serviceType} with ${provider.name}`);
     const eventDescription = encodeURIComponent(`Booking for ${service?.title || data.serviceType} with ${provider.name}.`);
@@ -359,6 +386,18 @@ export async function verifyBookingPayment(
     const customerDisplayTime = `${customerBookingTime} (${customerTimezone.replace(/_/g, ' ')})`;
     const providerDisplayTime = `${providerBookingTime} (${providerTimeZone.replace(/_/g, ' ')})`;
 
+    try {
+        await sendFCMNotification(
+            booking.customerEmail,
+            'Booking Confirmed',
+            `Your booking with ${provider.name} has been confirmed for ${customerBookingDate} at ${customerDisplayTime}.`,
+            `/${provider.username}`,
+            'guest'
+        );
+    } catch (err) {
+        console.error("Failed to send guest FCM notification in verifyBookingPayment:", err);
+    }
+
 
     const eventTitle = encodeURIComponent(`Appointment: ${service?.title || booking.serviceType} with ${provider.name}`);
     const eventDescription = encodeURIComponent(`Booking for ${service?.title || booking.serviceType} with ${provider.name}.`);
@@ -372,7 +411,7 @@ export async function verifyBookingPayment(
     const icsContent = [ 'BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', `DTSTART;TZID=${providerTimeZone}:${toGoogleISO(startTime).slice(0, -1)}`, `DTEND;TZID=${providerTimeZone}:${toGoogleISO(endTime).slice(0, -1)}`, `SUMMARY:${eventTitle}`, `DESCRIPTION:${eventDescription}`, `LOCATION:${eventLocation}`, 'END:VEVENT', 'END:VCALENDAR' ].join('\r\n');
     const icsLink = `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
     
-    const paymentDetails = `Paid ₹${amount} Online`;
+    const paymentDetails = `Paid ${formatAmount(amount, provider.settings.currency || 'INR')} Online`;
 
     await sendBookingConfirmationEmail(booking.customerEmail, {
         customerName: booking.customerName,
@@ -680,8 +719,8 @@ export async function cancelBooking(provider: Provider, booking: Booking) {
 
     const timezone = provider.settings.timezone;
     const dateFormat = provider.settings.dateFormat || 'PPP';
-    const bookingDate = formatInTimeZone(booking.dateTime, timezone, dateFormat);
-    const bookingTime = formatInTimeZone(booking.dateTime, timezone, 'p');
+    const bookingDate = formatInTimeZone(new Date(booking.dateTime), timezone, dateFormat);
+    const bookingTime = formatInTimeZone(new Date(booking.dateTime), timezone, 'p');
     const service = await getServiceBySlug(provider.username, booking.serviceSlug);
 
     await sendBookingCancelledEmail(booking.customerEmail, {
@@ -692,6 +731,30 @@ export async function cancelBooking(provider: Provider, booking: Booking) {
       bookingDate: bookingDate,
       bookingTime: bookingTime,
     });
+
+    try {
+        await sendFCMNotification(
+            provider.username,
+            'Booking Cancelled',
+            `The booking for ${booking.customerName} on ${bookingDate} at ${bookingTime} has been cancelled.`,
+            '/bookings',
+            'user'
+        );
+    } catch (err) {
+        console.error("Failed to send provider FCM notification in cancelBooking:", err);
+    }
+
+    try {
+        await sendFCMNotification(
+            booking.customerEmail,
+            'Booking Cancelled',
+            `Your booking with ${provider.name} on ${bookingDate} has been cancelled.`,
+            `/${provider.username}`,
+            'guest'
+        );
+    } catch (err) {
+        console.error("Failed to send guest FCM notification in cancelBooking:", err);
+    }
     
     revalidatePath(`/(provider-dashboard)/bookings`);
     return { success: true };
@@ -716,8 +779,8 @@ export async function rescheduleBooking(username: string, bookingId: string, new
 
     const timezone = provider.settings.timezone;
     const dateFormat = provider.settings.dateFormat || 'PPP';
-    const newBookingDate = formatInTimeZone(newDateTime, timezone, dateFormat);
-    const newBookingTime = formatInTimeZone(newDateTime, timezone, 'p');
+    const newBookingDate = formatInTimeZone(new Date(newDateTime), timezone, dateFormat);
+    const newBookingTime = formatInTimeZone(new Date(newDateTime), timezone, 'p');
 
     await sendRescheduleEmail(booking.customerEmail, {
       customerName: booking.customerName,
@@ -736,6 +799,30 @@ export async function rescheduleBooking(username: string, bookingId: string, new
       serviceTitle: service?.title,
       serviceType: booking.serviceType
     });
+
+    try {
+        await sendFCMNotification(
+            username,
+            'Booking Rescheduled',
+            `The booking for ${booking.customerName} has been rescheduled to ${newBookingDate} at ${newBookingTime}.`,
+            '/bookings',
+            'user'
+        );
+    } catch (err) {
+        console.error("Failed to send provider FCM notification in rescheduleBooking:", err);
+    }
+
+    try {
+        await sendFCMNotification(
+            booking.customerEmail,
+            'Booking Rescheduled',
+            `Your booking with ${provider.name} has been rescheduled to ${newBookingDate} at ${newBookingTime}.`,
+            `/${provider.username}`,
+            'guest'
+        );
+    } catch (err) {
+        console.error("Failed to send guest FCM notification in rescheduleBooking:", err);
+    }
 
     revalidatePath(`/(provider-dashboard)/bookings`);
     return { success: true };

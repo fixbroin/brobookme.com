@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getProviderByUsername } from '@/lib/data';
 import { updateBooking, createPaymentRecord, addNotification, getBookingById, getServiceBySlug } from '@/lib/data';
 import Stripe from 'stripe';
+import { sendFCMNotification } from '@/lib/fcm.actions';
 import { formatInTimeZone } from 'date-fns-tz';
 import { sendBookingConfirmationEmail, sendProviderBookingNotificationEmail } from '@/lib/email-templates';
 
@@ -83,11 +84,22 @@ export async function POST(req: NextRequest) {
                     link: `/bookings`,
                 });
 
-                // Send Emails
                 const providerTimeZone = provider.settings.timezone;
                 const dateFormat = provider.settings.dateFormat || 'PPP';
                 const providerBookingDate = formatInTimeZone(booking.dateTime, providerTimeZone, dateFormat);
                 const providerBookingTime = formatInTimeZone(booking.dateTime, providerTimeZone, 'p');
+
+                try {
+                    await sendFCMNotification(
+                        booking.customerEmail,
+                        'Booking Confirmed',
+                        `Your booking with ${provider.name} has been confirmed for ${providerBookingDate} at ${providerBookingTime}.`,
+                        `/${provider.username}`,
+                        'guest'
+                    );
+                } catch (err) {
+                    console.error("Failed to send guest FCM notification in Stripe webhook:", err);
+                }
 
                 await sendBookingConfirmationEmail(booking.customerEmail, {
                     customerName: booking.customerName,
