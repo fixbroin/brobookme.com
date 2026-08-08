@@ -16,6 +16,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import {
+  Bell,
   BookOpen,
   CalendarCheck,
   Share2,
@@ -108,6 +109,22 @@ const DotButton: React.FC<{ selected: boolean; onClick: () => void }> = ({ selec
 
 
 export function HomePageContent({ settings }: { settings: SiteSettings }) {
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  const [badgeText, setBadgeText] = useState("Global Smart Appointment Booking Platform");
+  const [badgeIcon, setBadgeIcon] = useState("🌐");
+
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz.includes('Kolkata') || tz.includes('Calcutta') || tz.includes('India')) {
+        setBadgeText("India's #1 Appointment Booking Platform");
+        setBadgeIcon("🇮🇳");
+      }
+    } catch (e) {
+      // fallback to global defaults
+    }
+  }, []);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -171,11 +188,10 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
   }, []);
 
   const navLinks = [
-    { href: '#', label: 'Home' },
-    { href: '/about', label: 'About Us' },
-    { href: '#features', label: 'Features' },
-    { href: '#pricing', label: 'Pricing' },
-    { href: '#faq', label: 'FAQ' },
+    { label: 'Features', href: '#features' },
+    { label: 'Solutions', href: '#solutions' },
+    { label: 'Pricing', href: '#pricing' },
+    { label: 'Testimonials', href: '#testimonials' },
     { href: '#contact', label: 'Contact' },
     { href: '/brobookme', label: 'Demo' },
   ];
@@ -287,7 +303,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
 
       <main className="flex-1 pt-14">
         {/* 1. Hero Section */}
-        <section className="relative py-20 md:py-28 overflow-hidden">
+        <section className="relative py-8 md:py-8 overflow-hidden">
           <style dangerouslySetInnerHTML={{ __html: `
             @keyframes float-slow {
               0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -345,6 +361,9 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
             <div className='grid md:grid-cols-2 gap-12 items-center'>
               <div className="text-center md:text-left">
                 <ScrollAnimation>
+                    <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-all duration-300 text-xs py-1.5 px-3 shrink-0 inline-flex items-center gap-1.5">
+                      <span className="text-sm">{badgeIcon}</span> {badgeText}
+                    </Badge>
                     <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-foreground bg-gradient-to-r from-primary via-purple-600 to-accent bg-clip-text text-transparent leading-tight md:leading-none px-1 py-1">
                     {settings.hero.title}
                     </h2>
@@ -396,7 +415,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         </section>
 
         {/* 2. How It Works */}
-        <section id="how-it-works" className="py-20">
+        <section id="how-it-works" className="py-8">
           <div className="container mx-auto px-4 text-center md:px-6">
             <ScrollAnimation>
                 <h3 className="mb-4 text-sm font-semibold uppercase text-primary">Get Started in Minutes</h3>
@@ -435,7 +454,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         </section>
 
         {/* 3. Features Section */}
-        <section id="features" className="bg-muted py-20">
+        <section id="features" className="bg-muted py-8">
           <div className="container mx-auto px-4 text-center md:px-6">
             <ScrollAnimation>
                 <h3 className="mb-12 text-3xl font-bold">Powerful Features for Modern Professionals</h3>
@@ -446,8 +465,8 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
                 { icon: LayoutDashboard, title: 'Flexible Service Types', desc: 'Easily offer Online, Shop Visit, or Doorstep services to cater to all your clients.' },
                 { icon: Settings, title: 'Custom Booking Rules', desc: 'Control your schedule with booking delays, and allow single or multiple bookings per slot.' },
                 { icon: CalendarCheck, title: 'Google Calendar Sync', desc: 'Sync your BroBookMe schedule with your Google Calendar to avoid any booking conflicts.' },
-                { icon: Mail, title: 'AI-Enhanced Confirmations', desc: 'Impress clients with smart, personalized booking confirmations that can suggest relevant add-ons.' },
-                { icon: Wallet, title: 'Seamless Subscription Billing', desc: 'Integrate with your favorite payment provider for easy subscription and billing management.' },
+                { icon: Bell, title: 'Instant Emails & Push Alerts', desc: 'Get automated email notifications and real-time browser push alerts on desktop and mobile the moment a booking is created, rescheduled, or cancelled.' },
+                { icon: Share2, title: 'Custom Branded Mobile App', desc: 'Your clients can install your booking page as a mobile app (PWA) directly on their home screen with your own name and logo—completely free.' },
               ].map((feature, i) => (
                 <ScrollAnimation key={feature.title} delay={i * 0.1}>
                     <Card className="text-center flex flex-col items-center h-full rounded-[2rem] border border-primary/10 bg-background shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
@@ -466,7 +485,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         </section>
         
         {/* 4. Why Choose Us */}
-        <section id="why-choose-us" className="py-20">
+        <section id="why-choose-us" className="py-8">
             <div className="container mx-auto px-4 text-center md:px-6">
                 <ScrollAnimation>
                     <h3 className="mb-12 text-3xl font-bold">The smarter way to manage your time.</h3>
@@ -503,9 +522,188 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
             </div>
         </section>
 
+        {/* Advanced SEO Professions Section */}
+        <section id="solutions" className="py-8 bg-muted/30">
+          <div className="container mx-auto px-4 md:px-6">
+            <ScrollAnimation>
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <Badge className="mb-3 px-3 py-1 text-xs">Industries & Solutions</Badge>
+                <h3 className="text-3xl font-extrabold md:text-4xl text-foreground tracking-tight">
+                  One Booking App for Every Profession
+                </h3>
+                <p className="text-muted-foreground mt-4 text-lg">
+                  Tailor your scheduling system to fit your specific trade. Perfect for local services, healthcare, legal consultations, lifestyle salons, and professional coaching.
+                </p>
+              </div>
+            </ScrollAnimation>
+
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Plumbers & Electricians */}
+              <ScrollAnimation delay={0.1}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
+                      <Zap className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Plumbers & Electricians</CardTitle>
+                      <CardDescription>Home Service Scheduling</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Optimize job routes and home bookings. Customers can book service appointments, select their required duration, specify their location address, and receive automated email confirmations instantly.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+
+              {/* Doctors & Wellness Clinics */}
+              <ScrollAnimation delay={0.2}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                      <ShieldCheck className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Doctors & Healthcare</CardTitle>
+                      <CardDescription>Patient Appointment Management</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Streamline patient check-ups, follow-ups, and clinic hours. Integrate Google Calendar and trigger instant browser push notifications for real-time schedule changes and booking updates.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+
+              {/* Lawyers & Consultants */}
+              <ScrollAnimation delay={0.3}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl">
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Lawyers & Consultants</CardTitle>
+                      <CardDescription>Paid Professional Sessions</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Accept premium consultation bookings. Collect advance online payments securely via Razorpay or Stripe, integrate Google Meet for virtual video conferences, and send links automatically.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+
+              {/* Salons & Barber Shops */}
+              <ScrollAnimation delay={0.4}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-xl">
+                      <Star className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Salons & Barber Shops</CardTitle>
+                      <CardDescription>Service Catalogs & Bookings</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Showcase hair cuts, styling options, nail art, or therapy listings. Customers choose their preferred service type, see clear prices and slot durations, and book instantly in seconds.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+
+              {/* Tutors & Online Coaches */}
+              <ScrollAnimation delay={0.5}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl">
+                      <BookOpen className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Tutors & Instructors</CardTitle>
+                      <CardDescription>Classes & Session Scheduling</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Manage virtual classes, study sessions, or coaching blocks. Synchronize with Google Calendar to prevent scheduling conflicts and receive desktop notifications whenever a student registers.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+
+              {/* Gyms & Personal Trainers */}
+              <ScrollAnimation delay={0.6}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
+                      <CalendarCheck className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Gyms & Personal Trainers</CardTitle>
+                      <CardDescription>Workout & Slot Bookings</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Coordinate personal training slots and classes. Keep track of customer contact phone numbers and send automatic rescheduling notification emails if workout slots change.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+
+              {/* Real Estate Agents */}
+              <ScrollAnimation delay={0.7}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                      <LayoutDashboard className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Real Estate Agents</CardTitle>
+                      <CardDescription>Property Tours & Consultations</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Schedule property viewings, open houses, and client consultations. Showcase stunning image galleries of listings, collect feedback reviews, and write real estate advice blogs to generate quality local leads.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+
+              {/* Photographers & Creatives */}
+              <ScrollAnimation delay={0.8}>
+                <Card className="h-full border bg-background hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-xl">
+                      <Share2 className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Photographers & Designers</CardTitle>
+                      <CardDescription>Creative Shoot & Consulting Bookings</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Allow clients to book photoshoots, design sessions, or project consulting. Display portfolios in beautiful image galleries, showcase verified customer reviews, and write creative blogs to attract clients.
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+            </div>
+          </div>
+        </section>
+
         {/* 5. Screenshots Section */}
         {settings.screenshots && settings.screenshots.screenshots && settings.screenshots.screenshots.length > 0 && (
-          <section id="screenshots" className="bg-muted py-20">
+          <section id="screenshots" className="bg-muted py-8">
               <div className="container mx-auto px-4 text-center md:px-6">
                   <ScrollAnimation>
                     <h3 className="mb-12 text-3xl font-bold">{settings.screenshots.title}</h3>
@@ -535,7 +733,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         )}
         
         {/* 6. Pricing Plans */}
-        <section id="pricing" className="py-20">
+        <section id="pricing" className="py-8">
           <div className="container mx-auto px-4 md:px-6">
             <ScrollAnimation>
                 <h3 className="mb-12 text-center text-3xl font-bold">Simple, transparent pricing.</h3>
@@ -614,7 +812,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         </section>
 
         {/* 7. Testimonials */}
-        <section id="testimonials" className="bg-muted py-20">
+        <section id="testimonials" className="bg-muted py-8">
           <div className="container mx-auto px-4 md:px-6">
             <ScrollAnimation>
                 <h3 className="mb-12 text-center text-3xl font-bold">Loved by professionals like you.</h3>
@@ -684,7 +882,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         </section>
         
         {/* 8. FAQ Section */}
-        <section id="faq" className="py-20">
+        <section id="faq" className="py-8">
             <div className="container max-w-3xl mx-auto px-4 md:px-6">
                 <ScrollAnimation>
                     <h3 className="mb-12 text-center text-3xl font-bold">Frequently Asked Questions</h3>
@@ -720,7 +918,7 @@ export function HomePageContent({ settings }: { settings: SiteSettings }) {
         </section>
 
         {/* 9. Final CTA */}
-        <section className="bg-primary text-primary-foreground py-20">
+        <section className="bg-primary text-primary-foreground py-8">
           <div className="container mx-auto px-4 text-center md:px-6">
             <ScrollAnimation>
                 <h3 className="text-4xl font-bold">

@@ -23,9 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const brandingSettings = adminSettings?.site?.branding;
 
   const titleTemplate = seoSettings?.titleTemplate || `%s | ${brandingSettings?.siteName || 'BroBookMe'}`;
-  const defaultTitle = seoSettings?.defaultTitle || `${brandingSettings?.siteName || 'BroBookMe'} - Online Booking System for Service Providers`;
-  const defaultDescription = seoSettings?.defaultDescription || 'BroBookMe is a smart online booking platform for professionals. Manage appointments, reduce no-shows, accept payments securely, and streamline your business effortlessly.';
-  const defaultKeywords = seoSettings?.defaultKeywords || 'online booking system, appointment scheduling software, service booking app, professional booking software, appointment management, BroBookMe';
+  const defaultTitle = seoSettings?.defaultTitle || `${brandingSettings?.siteName || 'BroBookMe'} - Global Online Booking & Appointment Scheduling Software`;
+  const defaultDescription = seoSettings?.defaultDescription || 'BroBookMe is a smart, global online booking and scheduling platform for service providers worldwide. Accept payments via Stripe or Razorpay, manage calendars, reduce no-shows, and grow your business in India and globally.';
+  const defaultKeywords = seoSettings?.defaultKeywords || 'online booking system, appointment scheduling software, service booking app, Stripe payment booking, UPI booking system India, scheduling software for plumbers electricians, salon booking system, BroBookMe';
   const ogImageUrl = seoSettings?.openGraphImageUrl || '/og-image.png';
   const twitterHandle = seoSettings?.twitterHandle || '@brobookme';
 

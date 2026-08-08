@@ -287,18 +287,18 @@ export function ProviderBookingPageContent({ provider }: { provider: Provider })
       <div className="container max-w-7xl mx-auto pt-4 md:pt-8 relative z-10">
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes float-slow {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(2deg); }
+            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
+            50% { transform: translateY(-18px) translateX(12px) rotate(6deg) scale(1.04); }
           }
           @keyframes float-reverse {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(8px) rotate(-2deg); }
+            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
+            50% { transform: translateY(18px) translateX(-12px) rotate(-6deg) scale(0.96); }
           }
           .animate-float-slow {
-            animation: float-slow 7s ease-in-out infinite;
+            animation: float-slow 8s ease-in-out infinite;
           }
           .animate-float-reverse {
-            animation: float-reverse 9s ease-in-out infinite;
+            animation: float-reverse 10s ease-in-out infinite;
           }
         `}} />
         
